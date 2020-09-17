@@ -5,7 +5,7 @@ from utils.images_controller import ImagesController
 from copy import copy
 import math as mt
 from const import width_screen, height_screen, height_canvas, width_canvas
-from entities.path import TypeMove
+from entities.path import MoveTypeV2, PathType
 from functools import partial
 
 
@@ -112,37 +112,47 @@ class Application(tk.Frame):
     def animate_route(self, x, y, path, paths, bus, image_controller, id_image):
         # self.canvas.move(id_image, bus.get_speed(), bus.get_speed()) Se mueve a un dx en x y un dy en y
         if self.active:
+            self.canvas.coords(id_image, (x, y))
             (x_final, y_final) = path.get_end_point()
             # print("{} {} {} {}".format(x,y,x_final,y_final))
-            if path.get_type_move() != TypeMove.DETENIDO and ((x < x_final or y < y_final) and not path.get_reverse()):
-                self.canvas.coords(id_image, (x, y))
-                # Moverse Horizontalmente
-                if path.get_type_move() == TypeMove.VERTICAL.HORIZONTAL:
-                    self.after(20, self.animate_route, x + bus.get_speed(), y, path, paths, bus, image_controller,
-                               id_image)
-                # Moverse Verticalmente
-                elif path.get_type_move() == TypeMove.VERTICAL:
-                    self.after(20, self.animate_route, x, y + bus.get_speed(), path, paths, bus, image_controller,
-                               id_image)
-                # Moverse Diagonalmente
-                elif path.get_type_move() == TypeMove.DIAGONAL:
-                    (x_inicial, y_inicial) = path.get_start_point()
-                    vy = bus.get_speed()
-                    vx = (x_final - x_inicial)/((y_final - y_inicial)/vy)
-                    self.after(20, self.animate_route, x + vx, y + vy, path, paths,
-                               bus, image_controller, id_image)
-            elif path.get_type_move() != TypeMove.DETENIDO and ((x > x_final or y > y_final) and path.get_reverse()):
-                self.canvas.coords(id_image, (x, y))
-                # Moverse Horizontalmente
-                if path.get_type_move() == TypeMove.HORIZONTAL:
-                    self.after(20, self.animate_route, x - bus.get_speed(), y, path, paths, bus, image_controller,
-                               id_image)
-                # Moverse Verticalmente
-                elif path.get_type_move() == TypeMove.VERTICAL:
+            if path.path_state(x, y):
+                if path.get_type_move() == MoveTypeV2.VERTICAL_ARRIBA:
                     self.after(20, self.animate_route, x, y - bus.get_speed(), path, paths, bus, image_controller,
                                id_image)
-                # Moverse Diagonalmente
-                # elif path.get_type_move() == 2:
+                elif path.get_type_move() == MoveTypeV2.VERTICAL_ABAJO:
+                    self.after(20, self.animate_route, x, y + bus.get_speed(), path, paths, bus, image_controller,
+                               id_image)
+                elif path.get_type_move() == MoveTypeV2.HORIZONTAL_IZQUIERDA:
+                    self.after(20, self.animate_route, x - bus.get_speed(), y, path, paths, bus, image_controller,
+                               id_image)
+                elif path.get_type_move() == MoveTypeV2.HORIZONTAL_DERECHA:
+                    self.after(20, self.animate_route, x + bus.get_speed(), y, path, paths, bus, image_controller,
+                               id_image)
+                elif path.get_type_move() == MoveTypeV2.DIAG_IZQ_ARR:
+                    (x_inicial, y_inicial) = path.get_start_point()
+                    vy = bus.get_speed()
+                    vx = (x_final - x_inicial) / ((y_inicial - y_final) / vy)
+                    self.after(20, self.animate_route, x - vx, y - vy, path, paths,
+                               bus, image_controller, id_image)
+                elif path.get_type_move() == MoveTypeV2.DIAG_IZQ_ABJ:
+                    (x_inicial, y_inicial) = path.get_start_point()
+                    vy = bus.get_speed()
+                    vx = (x_inicial - x_final) / ((y_final - y_inicial) / vy)
+                    # vx = bus.get_speed()*math.cos(30)
+                    self.after(20, self.animate_route, x - vx, y + vy, path, paths,
+                               bus, image_controller, id_image)
+                elif path.get_type_move() == MoveTypeV2.DIAG_DER_ARR:
+                    (x_inicial, y_inicial) = path.get_start_point()
+                    vy = bus.get_speed()
+                    vx = (x_final - x_inicial) / ((y_inicial - y_final) / vy)
+                    self.after(20, self.animate_route, x + vx, y - vy, path, paths,
+                               bus, image_controller, id_image)
+                elif path.get_type_move() == MoveTypeV2.DIAG_DER_ABJ:
+                    (x_inicial, y_inicial) = path.get_start_point()
+                    vy = bus.get_speed()
+                    vx = (x_final - x_inicial) / ((y_final - y_inicial) / vy)
+                    self.after(20, self.animate_route, x + vx, y + vy, path, paths,
+                               bus, image_controller, id_image)
             else:
                 if len(paths) > 0:
                     path = paths[0]
@@ -151,7 +161,7 @@ class Application(tk.Frame):
                     del paths[0]
 
                     station = path.get_station()
-                    if path.get_type_move() == TypeMove.DETENIDO and station:
+                    if path.get_type_move() == MoveTypeV2.DETENIDO and station:
                         station.set_passengers(station.get_passengers()-bus.get_use())
                         bus.set_use(0)
                         self.canvas.itemconfig(station.get_id(), text=station.get_passengers())
@@ -172,17 +182,31 @@ class Application(tk.Frame):
                         self.animate_route(x=path_x1, y=path_y1, path=path, paths=paths, bus=bus,
                                            image_controller=image_controller, id_image=id_image)
 
-    def paint_stations(self):
+    def paint_map(self):
         # images = self.images.get_images()
+        paths = self.generator.map_paths
+        station_width = 8
+        for path in paths:
+            (x_init, y_init) = path.get_start_point()
+            (x_end, y_end) = path.get_end_point()
+            type_path = path.get_path_type()
+
+            if type_path == PathType.HORIZONTAL:
+                self.canvas.create_line(x_init, y_init, x_end, y_end)
+            elif type_path == PathType.VERTICAL:
+                self.canvas.create_line(x_init, y_init, x_end, y_end)
+            elif type_path == PathType.DIAGONAL:
+                self.canvas.create_line(x_init, y_init, x_end, y_end)
         for station in self.generator.stations:
             (x, y) = station.get_location()
-            self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, fill='#4571EC')
+            self.canvas.create_oval(x - station_width, y - station_width,
+                                    x + station_width, y + station_width, fill='#4571EC')
             id_text = self.canvas.create_text(x, y + 10, text=station.get_passengers())
             station.set_id(id_text)
             # self.canvas.create_image(x, y, image=images['station'])
         for parking in self.generator.parking_lot:
             (x, y) = parking.get_location()
-            self.canvas.create_oval(x - 5, y - 5, x + 5, y + 5, fill='#000000')
+            self.canvas.create_oval(x - station_width, y - station_width, x + station_width, y + station_width, fill='#000000')
 
     def start(self):
         # print("Starting Simulation...")
@@ -190,7 +214,7 @@ class Application(tk.Frame):
             self.canvas.delete('all')
             self.generator.load_map()
             self.active = True
-            self.paint_stations()
+            self.paint_map()
         for bus in self.generator.buses:
             bus_route = bus.get_route()
 
