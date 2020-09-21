@@ -108,7 +108,7 @@ class Generator(Observer):
         path_retorno1 = Path(start=(width_canvas - 40, height_canvas - 40),
                              end=(40, height_canvas - 40))
         path_retorno2 = Path(start=(40, height_canvas - 40),
-                             end=(40, 40))
+                             end=(40, 40), station=self.parking_lot[0])
 
         route1 = Route()
         route1.add_path(path0_route1)
@@ -155,10 +155,13 @@ class Generator(Observer):
     def load_stations(self):
         stn1 = Station(location=((width_canvas+padding_canvas) / 4, (height_canvas+padding_canvas) / 4), passengers=50)
         stn2 = Station(location=(width_canvas / 2, height_canvas / 2), passengers=40)
-        stn3 = Station(location=(((3 * width_canvas)-padding_canvas) / 4, ((3 * height_canvas)-padding_canvas) / 4), passengers=30)
+        stn3 = Station(location=(((3 * width_canvas)-padding_canvas) / 4, ((3 * height_canvas)-padding_canvas) / 4),
+                       passengers=30)
 
-        stn4 = Station(location=(((3*width_canvas)-padding_canvas)/4, (height_canvas+padding_canvas) / 4), passengers=20)
-        stn5 = Station(location=((width_canvas+padding_canvas) / 4, ((3*height_canvas)-padding_canvas) / 4), passengers=10)
+        stn4 = Station(location=(((3*width_canvas)-padding_canvas)/4, (height_canvas+padding_canvas) / 4),
+                       passengers=20)
+        stn5 = Station(location=((width_canvas+padding_canvas) / 4, ((3*height_canvas)-padding_canvas) / 4),
+                       passengers=10)
 
         self.stations.append(stn1)
         self.stations.append(stn2)

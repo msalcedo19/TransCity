@@ -65,10 +65,9 @@ class Path:
 
         """
     __mapPath: MapPath
-    __station: Station
     __typeMove: MoveTypeV2
 
-    def __init__(self, start: (int, int), end: (int, int), station: Station = None):
+    def __init__(self, start: (int, int), end: (int, int), station=None):
         self.__startPoint = start
         self.__endPoint = end
         self.__station = station

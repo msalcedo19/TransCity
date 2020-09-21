@@ -14,6 +14,7 @@ class Application(tk.Frame):
     panel: tk.Frame
 
     panel_info_bus: tk.Frame = None
+    panel_info_station: tk.Frame = None
 
     btn_start: tk.Button
     btn_stop: tk.Button
@@ -27,6 +28,46 @@ class Application(tk.Frame):
         self.pack()
         self.create_widgets()
         self.active = False
+
+    def create_buttons_stations(self):
+        stations = self.generator.stations
+
+        panel_stations = tk.Frame(self.panel)
+        panel_stations.columnconfigure(0, weight=1)
+        panel_stations.columnconfigure(1, weight=1)
+        panel_stations.columnconfigure(2, weight=1)
+
+        panel_title_stations = tk.Frame(panel_stations)
+        panel_title = tk.Label(panel_title_stations, text="Stations", bg="gray36", width=100)
+        panel_title.pack(fill='x')
+        panel_title_stations.grid(row=0, columnspan=3)
+
+        cant_btn = 0
+        for i in range(0, mt.ceil(len(stations)/3)):
+            for j in range(0, 3):
+                if cant_btn < len(stations):
+                    btn = tk.Button(panel_stations, text="Station {}".format(cant_btn+1),
+                                    command=partial(self.show_info_station, cant_btn))
+                    btn.grid(row=i+1, column=j, sticky='ew')
+                    cant_btn += 1
+
+        panel_stations.grid(row=2, sticky="ew")
+
+    def show_info_station(self, index):
+        station = self.generator.stations[index]
+        if self.panel_info_station:
+            self.panel_info_station.pack_forget()
+        self.panel_info_station = tk.Frame(self, bg='green')
+
+        panel_station = tk.Frame(self.panel_info_station)
+        station_title = tk.Label(panel_station, text="Estación {}".format(index+1), bg="gray36", width=25)
+        station_title.pack(fill='x')
+        panel_station.grid(row=0, columnspan=2)
+
+        passengers_info = tk.Label(self.panel_info_station, text="# Pasajeros:{}".format(station.get_passengers()), width=25)
+        passengers_info.grid(row=1, columnspan=2)
+
+        self.panel_info_station.place(x=width_screen-width_canvas, y=(height_canvas/8)-15)
 
     def create_buttons_simulation(self):
         panel_simulation = tk.Frame(self.panel)
@@ -63,7 +104,7 @@ class Application(tk.Frame):
         bus_title.pack(fill='x')
         panel_bus.grid(row=0, columnspan=2)
 
-        passengers_info = tk.Label(self.panel_info_bus, text="# Pasajero:{}".format(bus.get_use()), width=25)
+        passengers_info = tk.Label(self.panel_info_bus, text="# Pasajeros:{}".format(bus.get_use()), width=25)
         passengers_info.grid(row=1, columnspan=2)
 
         self.panel_info_bus.place(x=width_screen-width_canvas, y=(height_canvas/8)-15)
@@ -81,9 +122,14 @@ class Application(tk.Frame):
         panel_title.pack(fill='x')
         panel_title_buses.grid(row=0, columnspan=3)
 
-        for i in range(0, len(buses)):
-            btn = tk.Button(panel_buses, text="Bus {}".format(i+1), command=partial(self.show_info_bus, i))
-            btn.grid(row=1, column=i, sticky='ew')
+        cant_btn = 0
+        for i in range(0, mt.ceil(len(buses)/3)):
+            for j in range(0, 3):
+                if cant_btn < len(buses):
+                    btn = tk.Button(panel_buses, text="Bus {}".format(cant_btn+1),
+                                    command=partial(self.show_info_bus, cant_btn))
+                    btn.grid(row=i+1, column=j, sticky='ew')
+                    cant_btn += 1
 
         panel_buses.grid(row=1, sticky="ew")
 
@@ -95,19 +141,12 @@ class Application(tk.Frame):
 
         self.panel = tk.Frame(self, bg="gray")
         self.panel.columnconfigure(0, minsize=260, weight=1)
+        self.panel.rowconfigure(1, pad=50)
         self.panel.grid(row=0, column=0, sticky="nsew")
 
         self.create_buttons_simulation()
         self.create_buttons_buses()
-
-    def mov_circular(self, x1: int, y1: int, path, paths, bus, image_controller, id_image, t):
-        if t < 6.3:
-            x = 5*mt.cos(t)
-            y = 5*mt.sin(t)
-            self.canvas.coords(id_image, (x1+x, y1+y))
-            self.after(20, self.mov_circular, x1+x, y1+y, path, paths, bus, image_controller, id_image, t+0.1)
-        else:
-            self.after(20, self.animate_route, x1, y1+1, path, paths, bus, image_controller, id_image)
+        self.create_buttons_stations()
 
     def animate_route(self, x, y, path, paths, bus, image_controller, id_image):
         # self.canvas.move(id_image, bus.get_speed(), bus.get_speed()) Se mueve a un dx en x y un dy en y
@@ -181,6 +220,12 @@ class Application(tk.Frame):
                         # pid = self.canvas.create_image(path_x1, path_y1, image=image_controller.get_images()['train'])
                         self.animate_route(x=path_x1, y=path_y1, path=path, paths=paths, bus=bus,
                                            image_controller=image_controller, id_image=id_image)
+                elif path.get_station:
+                    station = path.get_station()
+                    station.increase_use()
+                    self.canvas.itemconfig(station.get_id(),
+                                           text=str(station.get_use())+"/"+str(station.get_capacity()))
+                    self.canvas.delete(id_image)
 
     def paint_map(self):
         # images = self.images.get_images()
@@ -201,12 +246,15 @@ class Application(tk.Frame):
             (x, y) = station.get_location()
             self.canvas.create_oval(x - station_width, y - station_width,
                                     x + station_width, y + station_width, fill='#4571EC')
-            id_text = self.canvas.create_text(x, y + 10, text=station.get_passengers())
+            id_text = self.canvas.create_text(x, y + 15, text=station.get_passengers())
             station.set_id(id_text)
             # self.canvas.create_image(x, y, image=images['station'])
         for parking in self.generator.parking_lot:
             (x, y) = parking.get_location()
-            self.canvas.create_oval(x - station_width, y - station_width, x + station_width, y + station_width, fill='#000000')
+            self.canvas.create_oval(x - station_width, y - station_width,
+                                    x + station_width, y + station_width, fill='#000000')
+            id_text = self.canvas.create_text(x-16, y + 10, text=str(parking.get_use())+"/"+str(parking.get_capacity()))
+            parking.set_id(id_text)
 
     def start(self):
         # print("Starting Simulation...")

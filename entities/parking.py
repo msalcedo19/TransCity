@@ -12,11 +12,13 @@ class Parking:
     __capacity: int
     __use: int
     __location: (int, int)
+    __id: int
 
     def __init__(self, capacity: int, location: (int, int)):
         self.__capacity = capacity
         self.__use = 0
         self.__location = location
+        self.__id = None
 
     def get_capacity(self):
         return self.__capacity
@@ -38,3 +40,10 @@ class Parking:
 
     def get_location(self) -> (int, int):
         return self.__location
+
+    def set_id(self, id_text: int):
+        self.__id = id_text
+
+    def get_id(self):
+        return self.__id
+
