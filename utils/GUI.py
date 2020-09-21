@@ -5,8 +5,33 @@ from utils.images_controller import ImagesController
 from copy import copy
 import math as mt
 from const import width_screen, height_screen, height_canvas, width_canvas
-from entities.path import MoveTypeV2, PathType
+from entities.path import MoveTypeV2, PathType, Path
 from functools import partial
+
+
+class AnimationObject:
+
+    def __init__(self, x, y, actual_path, paths_left, actual_bus, id_object):
+        self.x = x
+        self.y = y
+        self.actual_path = actual_path
+        self.paths_left = paths_left
+        self.actual_bus = actual_bus
+        self.id_object = id_object
+
+    def set_value(self, **kwargs):
+        if kwargs.get('x'):
+            self.x = kwargs['x']
+        if kwargs.get('y'):
+            self.y = kwargs['y']
+        if kwargs.get('actual_path'):
+            self.actual_path = kwargs['actual_path']
+        if kwargs.get('paths_left'):
+            self.paths_left = kwargs['paths_left']
+        if kwargs.get('actual_bus'):
+            self.actual_bus = kwargs['actual_bus']
+        if kwargs.get('id_object'):
+            self.id_object = kwargs['id_object']
 
 
 class Application(tk.Frame):
@@ -22,12 +47,13 @@ class Application(tk.Frame):
 
     def __init__(self, master: tk.Tk, generator: Generator):
         super().__init__(master)
+        self.active = False
+        self.data_resume = []
         self.master = master
         self.generator = generator
         self.images = ImagesController()
         self.pack()
         self.create_widgets()
-        self.active = False
 
     def create_buttons_stations(self):
         stations = self.generator.stations
@@ -56,18 +82,21 @@ class Application(tk.Frame):
     def show_info_station(self, index):
         station = self.generator.stations[index]
         if self.panel_info_station:
-            self.panel_info_station.pack_forget()
+            self.panel_info_station.place_forget()
         self.panel_info_station = tk.Frame(self, bg='green')
 
         panel_station = tk.Frame(self.panel_info_station)
-        station_title = tk.Label(panel_station, text="Estación {}".format(index+1), bg="gray36", width=25)
-        station_title.pack(fill='x')
+        station_title = tk.Label(panel_station, text="Station {}".format(index+1), bg="gray36", width=25)
+        station_title.grid(row=0, column=0)
+        btn_close = tk.Button(panel_station, text="x", command=lambda: self.panel_info_station.place_forget())
+        btn_close.grid(row=0, column=1)
         panel_station.grid(row=0, columnspan=2)
 
-        passengers_info = tk.Label(self.panel_info_station, text="# Pasajeros:{}".format(station.get_passengers()), width=25)
+        passengers_info = tk.Label(self.panel_info_station, text="# Passengers:{}".format(station.get_passengers()),
+                                   width=25)
         passengers_info.grid(row=1, columnspan=2)
 
-        self.panel_info_station.place(x=width_screen-width_canvas, y=(height_canvas/8)-15)
+        self.panel_info_station.place(x=width_screen-width_canvas, y=(height_canvas/4)+10)
 
     def create_buttons_simulation(self):
         panel_simulation = tk.Frame(self.panel)
@@ -88,26 +117,10 @@ class Application(tk.Frame):
 
         btn_resume_frame = tk.Frame(panel_simulation)
         btn_resume_frame.grid(row=2, columnspan=2)
-        self.btn_resume = tk.Button(btn_resume_frame, text="Resume")
+        self.btn_resume = tk.Button(btn_resume_frame, text="Resume", command=self.resume, width=20)
         self.btn_resume.pack(expand=True)
 
         panel_simulation.grid(row=0, sticky="ew")
-
-    def show_info_bus(self, index):
-        bus = self.generator.buses[index]
-        if self.panel_info_bus:
-            self.panel_info_bus.pack_forget()
-        self.panel_info_bus = tk.Frame(self, bg='green')
-
-        panel_bus = tk.Frame(self.panel_info_bus)
-        bus_title = tk.Label(panel_bus, text="Bus {}".format(index+1), bg="gray36", width=25)
-        bus_title.pack(fill='x')
-        panel_bus.grid(row=0, columnspan=2)
-
-        passengers_info = tk.Label(self.panel_info_bus, text="# Pasajeros:{}".format(bus.get_use()), width=25)
-        passengers_info.grid(row=1, columnspan=2)
-
-        self.panel_info_bus.place(x=width_screen-width_canvas, y=(height_canvas/8)-15)
 
     def create_buttons_buses(self):
         buses = self.generator.buses
@@ -133,6 +146,29 @@ class Application(tk.Frame):
 
         panel_buses.grid(row=1, sticky="ew")
 
+    def show_info_bus(self, index):
+        bus = self.generator.buses[index]
+        if self.panel_info_bus:
+            self.panel_info_bus.place_forget()
+        self.panel_info_bus = tk.Frame(self)
+
+        panel_bus = tk.Frame(self.panel_info_bus)
+        panel_bus.columnconfigure(0, minsize=50)
+        bus_title = tk.Label(panel_bus, text="Bus {}".format(index + 1), bg="gray36", width=25)
+        bus_title.grid(row=0, column=0)
+        btn_close = tk.Button(panel_bus, text="x", command=lambda: self.panel_info_bus.place_forget())
+        btn_close.grid(row=0, column=1)
+        panel_bus.grid(row=0, columnspan=2)
+
+        speed_info = tk.Label(self.panel_info_bus, text="Speed: {}".format(bus.get_speed()), width=25)
+        speed_info.grid(row=1, columnspan=2)
+        capacity_info = tk.Label(self.panel_info_bus, text="Capacity: {}".format(bus.get_capacity()), width=25)
+        capacity_info.grid(row=2, columnspan=2)
+        passengers_info = tk.Label(self.panel_info_bus, text="# Passengers:{}".format(bus.get_use()), width=25)
+        passengers_info.grid(row=3, columnspan=2)
+
+        self.panel_info_bus.place(x=width_screen - width_canvas, y=(height_canvas / 6) - 22)
+
     def create_widgets(self):
         self.rowconfigure(0, minsize=720, weight=1)
         self.columnconfigure(0, minsize=260, weight=1)
@@ -148,51 +184,59 @@ class Application(tk.Frame):
         self.create_buttons_buses()
         self.create_buttons_stations()
 
-    def animate_route(self, x, y, path, paths, bus, image_controller, id_image):
+    def animate_route(self, animation_object: AnimationObject):
         # self.canvas.move(id_image, bus.get_speed(), bus.get_speed()) Se mueve a un dx en x y un dy en y
         if self.active:
+            # Atributos necesarios para realizar la animación
+            id_image = animation_object.id_object
+            x = animation_object.x
+            y = animation_object.y
+            path = animation_object.actual_path
+            bus = animation_object.actual_bus
+
             self.canvas.coords(id_image, (x, y))
             (x_final, y_final) = path.get_end_point()
             # print("{} {} {} {}".format(x,y,x_final,y_final))
             if path.path_state(x, y):
                 if path.get_type_move() == MoveTypeV2.VERTICAL_ARRIBA:
-                    self.after(20, self.animate_route, x, y - bus.get_speed(), path, paths, bus, image_controller,
-                               id_image)
+                    animation_object.set_value(x=x, y=y - bus.get_speed())
+                    self.after(20, self.animate_route, animation_object)
                 elif path.get_type_move() == MoveTypeV2.VERTICAL_ABAJO:
-                    self.after(20, self.animate_route, x, y + bus.get_speed(), path, paths, bus, image_controller,
-                               id_image)
+                    animation_object.set_value(x=x, y=y + bus.get_speed())
+                    self.after(20, self.animate_route, animation_object)
                 elif path.get_type_move() == MoveTypeV2.HORIZONTAL_IZQUIERDA:
-                    self.after(20, self.animate_route, x - bus.get_speed(), y, path, paths, bus, image_controller,
-                               id_image)
+                    animation_object.set_value(x=x - bus.get_speed(), y=y)
+                    self.after(20, self.animate_route, animation_object)
                 elif path.get_type_move() == MoveTypeV2.HORIZONTAL_DERECHA:
-                    self.after(20, self.animate_route, x + bus.get_speed(), y, path, paths, bus, image_controller,
-                               id_image)
+                    animation_object.set_value(x=x + bus.get_speed(), y=y)
+                    self.after(20, self.animate_route, animation_object)
                 elif path.get_type_move() == MoveTypeV2.DIAG_IZQ_ARR:
                     (x_inicial, y_inicial) = path.get_start_point()
                     vy = bus.get_speed()
                     vx = (x_final - x_inicial) / ((y_inicial - y_final) / vy)
-                    self.after(20, self.animate_route, x - vx, y - vy, path, paths,
-                               bus, image_controller, id_image)
+                    animation_object.set_value(x=x - vx, y=y - vy)
+                    self.after(20, self.animate_route, animation_object)
                 elif path.get_type_move() == MoveTypeV2.DIAG_IZQ_ABJ:
                     (x_inicial, y_inicial) = path.get_start_point()
                     vy = bus.get_speed()
                     vx = (x_inicial - x_final) / ((y_final - y_inicial) / vy)
-                    # vx = bus.get_speed()*math.cos(30)
-                    self.after(20, self.animate_route, x - vx, y + vy, path, paths,
-                               bus, image_controller, id_image)
+                    animation_object.set_value(x=x - vx, y=y + vy)
+                    self.after(20, self.animate_route, animation_object)
                 elif path.get_type_move() == MoveTypeV2.DIAG_DER_ARR:
                     (x_inicial, y_inicial) = path.get_start_point()
                     vy = bus.get_speed()
                     vx = (x_final - x_inicial) / ((y_inicial - y_final) / vy)
-                    self.after(20, self.animate_route, x + vx, y - vy, path, paths,
-                               bus, image_controller, id_image)
+                    animation_object.set_value(x=x + vx, y=y - vy)
+                    self.after(20, self.animate_route, animation_object)
                 elif path.get_type_move() == MoveTypeV2.DIAG_DER_ABJ:
                     (x_inicial, y_inicial) = path.get_start_point()
                     vy = bus.get_speed()
                     vx = (x_final - x_inicial) / ((y_final - y_inicial) / vy)
-                    self.after(20, self.animate_route, x + vx, y + vy, path, paths,
-                               bus, image_controller, id_image)
+                    animation_object.set_value(x=x + vx, y=y + vy)
+                    self.after(20, self.animate_route, animation_object)
             else:
+                paths = animation_object.paths_left
+                # Si la cantidad de caminos es mayor a cero significa que la ruta aún no ha terminado
                 if len(paths) > 0:
                     path = paths[0]
                     (path_x1, path_y1) = path.get_start_point()
@@ -204,7 +248,9 @@ class Application(tk.Frame):
                         station.set_passengers(station.get_passengers()-bus.get_use())
                         bus.set_use(0)
                         self.canvas.itemconfig(station.get_id(), text=station.get_passengers())
-                        self.after(1000, self.animate_route, path_x1, path_y1, path, paths, bus, image_controller, id_image)
+                        animation_object.set_value(x=path_x1, y=path_y1, actual_path=path,
+                                                   paths_left=paths, actual_bus=bus)
+                        self.after(1000, self.animate_route, animation_object)
                     else:
                         """key = 'train'
                         # Moverse Verticalmente
@@ -216,16 +262,17 @@ class Application(tk.Frame):
                             image_rotated = image_controller.rotate(0, key)
                             image_controller.change_image(key, image_rotated)"""
 
-                        # self.canvas.delete(id_image)
-                        # pid = self.canvas.create_image(path_x1, path_y1, image=image_controller.get_images()['train'])
-                        self.animate_route(x=path_x1, y=path_y1, path=path, paths=paths, bus=bus,
-                                           image_controller=image_controller, id_image=id_image)
+                        animation_object.set_value(x=path_x1, y=path_y1, actual_path=path,
+                                                   paths_left=paths, actual_bus=bus)
+                        self.animate_route(animation_object)
                 elif path.get_station:
                     station = path.get_station()
                     station.increase_use()
                     self.canvas.itemconfig(station.get_id(),
                                            text=str(station.get_use())+"/"+str(station.get_capacity()))
                     self.canvas.delete(id_image)
+        else:
+            self.data_resume.append(animation_object)
 
     def paint_map(self):
         # images = self.images.get_images()
@@ -260,9 +307,12 @@ class Application(tk.Frame):
         # print("Starting Simulation...")
         if not self.active:
             self.canvas.delete('all')
+            self.data_resume = []
             self.generator.load_map()
             self.active = True
             self.paint_map()
+            self.btn_start.configure(state='disabled')
+
         for bus in self.generator.buses:
             bus_route = bus.get_route()
 
@@ -272,10 +322,19 @@ class Application(tk.Frame):
             (x1, y1) = initial_path.get_start_point()
 
             pid = self.canvas.create_image(x1, y1, image=self.images.get_images()['train'])
-            self.after(1, self.animate_route, x1, y1, initial_path, paths, bus, self.images, pid)
+            animation_object = AnimationObject(x1, y1, initial_path, paths, bus, pid)
+            self.after(1, self.animate_route, animation_object)
 
     def pause(self):
+        self.btn_start.configure(state='active')
+        self.data_resume = []
         self.active = False
+
+    def resume(self):
+        self.btn_start.configure(state='disabled')
+        self.active = True
+        for obj in self.data_resume:
+            self.animate_route(obj)
 
 
 class GUI(ObserverLogic):
