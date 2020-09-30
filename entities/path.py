@@ -1,5 +1,4 @@
 from enum import Enum
-from entities.station import Station
 
 
 class MoveTypeV2(Enum):
@@ -67,50 +66,54 @@ class Path:
     __mapPath: MapPath
     __typeMove: MoveTypeV2
 
-    def __init__(self, start: (int, int), end: (int, int), station=None):
+    def __init__(self, start: (int, int), end: (int, int) = None, station=None):
         self.__startPoint = start
         self.__endPoint = end
         self.__station = station
         self.define_move_type()
 
     def define_move_type(self):
-        (x_init, y_init) = self.__startPoint
-        (x_final, y_final) = self.__endPoint
-
-        # No movimiento
-        if x_init == x_final and y_init == y_final:
+        if self.__endPoint is None:
             self.__typeMove = MoveTypeV2.DETENIDO
-        # Movimiento vertical
-        elif x_init == x_final:
-            if y_init > y_final:
-                self.__typeMove = MoveTypeV2.VERTICAL_ARRIBA
-            else:
-                self.__typeMove = MoveTypeV2.VERTICAL_ABAJO
-        # Movimiento Horizontal
-        elif y_init == y_final:
-            if x_init > x_final:
-                self.__typeMove = MoveTypeV2.HORIZONTAL_IZQUIERDA
-            else:
-                self.__typeMove = MoveTypeV2.HORIZONTAL_DERECHA
-        # Movimiento Diagonal
         else:
-            if x_init > x_final and y_init > y_final:
-                self.__typeMove = MoveTypeV2.DIAG_IZQ_ARR
-            elif x_init > x_final and y_init < y_final:
-                self.__typeMove = MoveTypeV2.DIAG_IZQ_ABJ
-            elif x_init < x_final and y_init > y_final:
-                self.__typeMove = MoveTypeV2.DIAG_DER_ARR
-            elif x_init < x_final and y_init < y_final:
-                self.__typeMove = MoveTypeV2.DIAG_DER_ABJ
+            (x_init, y_init) = self.__startPoint
+            (x_final, y_final) = self.__endPoint
 
-    # Retorna True si ya llego al punto de destino, False de lo contrario.
+            # No movimiento
+            if x_init == x_final and y_init == y_final:
+                self.__typeMove = MoveTypeV2.DETENIDO
+            # Movimiento vertical
+            elif x_init == x_final:
+                if y_init > y_final:
+                    self.__typeMove = MoveTypeV2.VERTICAL_ARRIBA
+                else:
+                    self.__typeMove = MoveTypeV2.VERTICAL_ABAJO
+            # Movimiento Horizontal
+            elif y_init == y_final:
+                if x_init > x_final:
+                    self.__typeMove = MoveTypeV2.HORIZONTAL_IZQUIERDA
+                else:
+                    self.__typeMove = MoveTypeV2.HORIZONTAL_DERECHA
+            # Movimiento Diagonal
+            else:
+                if x_init > x_final and y_init > y_final:
+                    self.__typeMove = MoveTypeV2.DIAG_IZQ_ARR
+                elif x_init > x_final and y_init < y_final:
+                    self.__typeMove = MoveTypeV2.DIAG_IZQ_ABJ
+                elif x_init < x_final and y_init > y_final:
+                    self.__typeMove = MoveTypeV2.DIAG_DER_ARR
+                elif x_init < x_final and y_init < y_final:
+                    self.__typeMove = MoveTypeV2.DIAG_DER_ABJ
+
+    # Retorna False si ya llego al punto de destino, True de lo contrario.
     def path_state(self, x: int, y: int):
-        (x_final, y_final) = self.__endPoint
-        x_aux = (x - x_final)/2
-        y_aux = (y - y_final)/2
-        dist = pow(pow(x_aux, 2) + pow(y_aux, 2), 0.5)
-        if dist >= 2:
-            return True
+        if self.__endPoint is not None:
+            (x_final, y_final) = self.__endPoint
+            x_aux = (x - x_final)/2
+            y_aux = (y - y_final)/2
+            dist = pow(pow(x_aux, 2) + pow(y_aux, 2), 0.5)
+            if dist >= 0.3:
+                return True
         return False
 
     def set_start_point(self, x: int, y: int):

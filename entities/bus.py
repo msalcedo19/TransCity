@@ -1,5 +1,5 @@
 from entities.route import Route
-from entities.parking import Parking
+from entities.station import Station
 
 
 class Bus:
@@ -15,16 +15,26 @@ class Bus:
         """
     __speed: float = 0
     __route: Route
-    __parking: Parking
+    __parking: Station
     __capacity: int
     __use: int
 
-    def __init__(self, parking: Parking, capacity: int, use: int, speed: float):
+    __id: int
+
+    def __init__(self, parking: Station, capacity: int, use: int, speed: float):
         self.__speed = speed
         self.__route = Route()
         self.__parking = parking
         self.__capacity = capacity
         self.__use = use
+        self.color = 'gray'
+        self.__id = None
+
+    def set_id(self, id_bus: int):
+        self.__id = id_bus
+
+    def get_id(self):
+        return self.__id
 
     def get_capacity(self):
         return self.__capacity
@@ -44,7 +54,7 @@ class Bus:
     def get_speed(self) -> float:
         return self.__speed
 
-    def set_parking(self, parking: Parking):
+    def set_parking(self, parking: Station):
         self.__parking = parking
 
     def get_use(self):
