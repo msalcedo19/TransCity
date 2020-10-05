@@ -1,4 +1,5 @@
 from enum import Enum
+from entities.station import Station
 
 
 class MoveTypeV2(Enum):
@@ -19,6 +20,7 @@ class PathType(Enum):
     DIAGONAL = 2
 
 
+# Para le futuro pensarlo como rotación
 class MapPath:
     __startPoint: (int, int)
     __endPoint: (int, int)
@@ -63,8 +65,10 @@ class Path:
         station -- Indica la estación asociada a ese tramo
 
         """
-    __mapPath: MapPath
     __typeMove: MoveTypeV2
+    __startPoint: (int, int)
+    __endPoint: (int, int)
+    __station: Station
 
     def __init__(self, start: (int, int), end: (int, int) = None, station=None):
         self.__startPoint = start

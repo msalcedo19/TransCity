@@ -8,6 +8,7 @@ from const import width_screen, height_screen, height_canvas, width_canvas
 from entities.path import MoveTypeV2, PathType, Path
 from entities.station import StationType
 from functools import partial
+from entities.route import Route
 
 
 class AnimationObject:
@@ -41,6 +42,7 @@ class Application(tk.Frame):
 
     panel_info_bus: tk.Frame = None
     panel_info_station: tk.Frame = None
+    panel_info_route: tk.Frame = None
 
     btn_start: tk.Button
     btn_stop: tk.Button
@@ -55,6 +57,30 @@ class Application(tk.Frame):
         self.images = ImagesController()
         self.pack()
         self.create_widgets()
+
+    def create_buttons_simulation(self):
+        panel_simulation = tk.Frame(self.panel)
+        panel_simulation.columnconfigure(0, weight=1)
+        panel_simulation.columnconfigure(1, weight=1)
+        panel_simulation.columnconfigure(2, weight=1)
+
+        panel_title_simulation = tk.Frame(panel_simulation)
+        panel_title = tk.Label(panel_title_simulation, text="Simulation", bg="gray36", width=260)
+        panel_title.pack(fill='x')
+        panel_title_simulation.grid(row=0, columnspan=2)
+
+        self.btn_start = tk.Button(panel_simulation, text="Start", command=self.start)
+        self.btn_start.grid(row=1, column=0, sticky='ew')
+
+        self.btn_stop = tk.Button(panel_simulation, text="Stop", command=self.pause)
+        self.btn_stop.grid(row=1, column=1, sticky='ew')
+
+        btn_resume_frame = tk.Frame(panel_simulation)
+        btn_resume_frame.grid(row=2, columnspan=2)
+        self.btn_resume = tk.Button(btn_resume_frame, text="Resume", command=self.resume, width=20)
+        self.btn_resume.pack(expand=True)
+
+        panel_simulation.grid(row=0, sticky="ew")
 
     def create_buttons_stations(self):
         stations = self.generator.stations
@@ -82,11 +108,11 @@ class Application(tk.Frame):
 
     def show_info_station(self, index):
         station = self.generator.stations[index]
-        self.canvas.itemconfig(station.id_map, fill='#0CB10B')
+        self.canvas.itemconfig(station.id_object, fill='#0CB10B')
 
         # Falta hacer que se quite el color si se presiono otro boton
         def hide_panel_info_station():
-            self.canvas.itemconfig(station.id_map, fill=station.color)
+            self.canvas.itemconfig(station.id_object, fill=station.color)
             self.panel_info_station.place_forget()
 
         if self.panel_info_station:
@@ -100,35 +126,11 @@ class Application(tk.Frame):
         btn_close.grid(row=0, column=1)
         panel_station.grid(row=0, columnspan=2)
 
-        passengers_info = tk.Label(self.panel_info_station, text="# Passengers:{}".format(station.get_passengers()),
+        passengers_info = tk.Label(self.panel_info_station, text="# Passengers:{}".format(station.get_use()),
                                    width=25)
         passengers_info.grid(row=1, columnspan=2)
 
         self.panel_info_station.place(x=width_screen-width_canvas, y=(height_canvas/4)+10)
-
-    def create_buttons_simulation(self):
-        panel_simulation = tk.Frame(self.panel)
-        panel_simulation.columnconfigure(0, weight=1)
-        panel_simulation.columnconfigure(1, weight=1)
-        panel_simulation.columnconfigure(2, weight=1)
-
-        panel_title_simulation = tk.Frame(panel_simulation)
-        panel_title = tk.Label(panel_title_simulation, text="Simulation", bg="gray36", width=260)
-        panel_title.pack(fill='x')
-        panel_title_simulation.grid(row=0, columnspan=2)
-
-        self.btn_start = tk.Button(panel_simulation, text="Start", command=self.start)
-        self.btn_start.grid(row=1, column=0, sticky='ew')
-
-        self.btn_stop = tk.Button(panel_simulation, text="Stop", command=self.pause)
-        self.btn_stop.grid(row=1, column=1, sticky='ew')
-
-        btn_resume_frame = tk.Frame(panel_simulation)
-        btn_resume_frame.grid(row=2, columnspan=2)
-        self.btn_resume = tk.Button(btn_resume_frame, text="Resume", command=self.resume, width=20)
-        self.btn_resume.pack(expand=True)
-
-        panel_simulation.grid(row=0, sticky="ew")
 
     def create_buttons_buses(self):
         buses = self.generator.buses
@@ -185,6 +187,68 @@ class Application(tk.Frame):
 
         self.panel_info_bus.place(x=width_screen - width_canvas, y=(height_canvas / 6) - 22)
 
+    def create_buttons_routes(self):
+        routes = self.generator.routes
+
+        panel_routes = tk.Frame(self.panel)
+        panel_routes.columnconfigure(0, weight=1)
+        panel_routes.columnconfigure(1, weight=1)
+        panel_routes.columnconfigure(2, weight=1)
+
+        panel_title_routes = tk.Frame(panel_routes)
+        panel_title = tk.Label(panel_title_routes, text="Routes", bg="gray36", width=100)
+        panel_title.pack(fill='x')
+        panel_title_routes.grid(row=0, columnspan=3)
+
+        cant_btn = 0
+        fin_i = 0
+        fin_j = 0
+        for i in range(1, mt.ceil(len(routes)/3)+1):
+            fin_i += 1
+            for j in range(0, 3):
+                fin_j = j
+                if cant_btn < len(routes):
+                    btn = tk.Button(panel_routes, text="Route {}".format(cant_btn+1),
+                                    command=partial(self.show_info_route, cant_btn))
+                    btn.grid(row=i, column=j, sticky='ew')
+                    cant_btn += 1
+        if fin_j == 2:
+            fin_j = 0
+            fin_i += 1
+        btn = tk.Button(panel_routes, text="Añadir Ruta")
+        btn.grid(row=fin_i, column=fin_j, sticky='ew')
+
+        panel_routes.grid(row=3, sticky="ew")
+
+    def show_info_route(self, index):
+        routes: Route = self.generator.routes[index]
+
+        lines_ids = []
+        for path in routes.get_paths():
+            (x_init, y_init) = path.get_start_point()
+            (x_final, y_final) = path.get_end_point()
+            pid = self.canvas.create_line(x_init, y_init, x_final, y_final, fill="green", width=3)
+            lines_ids.append(pid)
+
+        # Falta hacer que se quite el color si se presiono otro boton
+        def hide_panel_info_route(ptk, arr):
+            for pid2 in arr:
+                ptk.canvas.delete(pid2)
+            ptk.panel_info_route.place_forget()
+
+        if self.panel_info_route:
+            self.panel_info_route.place_forget()
+        self.panel_info_route = tk.Frame(self)
+
+        panel_route = tk.Frame(self.panel_info_route)
+        route_title = tk.Label(panel_route, text="Route {}".format(index+1), bg="gray36", width=25)
+        route_title.grid(row=0, column=0)
+        btn_close = tk.Button(panel_route, text="x", command=lambda: hide_panel_info_route(self, lines_ids))
+        btn_close.grid(row=0, column=1)
+        panel_route.grid(row=0, columnspan=2)
+
+        self.panel_info_route.place(x=width_screen-width_canvas, y=(height_canvas/3))
+
     def create_widgets(self):
         self.rowconfigure(0, minsize=720, weight=1)
         self.columnconfigure(0, minsize=260, weight=1)
@@ -194,11 +258,91 @@ class Application(tk.Frame):
         self.panel = tk.Frame(self, bg="gray")
         self.panel.columnconfigure(0, minsize=260, weight=1)
         self.panel.rowconfigure(1, pad=50)
+        self.panel.rowconfigure(3, pad=50)
         self.panel.grid(row=0, column=0, sticky="nsew")
 
         self.create_buttons_simulation()
         self.create_buttons_buses()
         self.create_buttons_stations()
+        self.create_buttons_routes()
+
+    def paint_map(self):
+        # images = self.images.get_images()
+        paths = self.generator.map_paths
+        station_width = 5
+
+        points_arr = []
+        for path in paths:
+            (x_init, y_init) = path.get_start_point()
+            (x_end, y_end) = path.get_end_point()
+            type_path = path.get_path_type()
+
+            if (x_init, y_init) not in points_arr:
+                self.canvas.create_text(x_init, y_init - 10, text=str((x_init, y_init)))
+                points_arr.append((x_init, y_init))
+
+            if type_path == PathType.HORIZONTAL:
+                self.canvas.create_line(x_init, y_init, x_end, y_end, width=2)
+            elif type_path == PathType.VERTICAL:
+                if (x_end, y_end) not in points_arr:
+                    self.canvas.create_text(x_end, y_end - 10, text=str((x_end, y_end)))
+                    points_arr.append((x_end, y_end))
+                self.canvas.create_line(x_init, y_init, x_end, y_end, width=2)
+            elif type_path == PathType.DIAGONAL:
+                self.canvas.create_line(x_init, y_init, x_end, y_end, width=2)
+        for station in self.generator.stations:
+            (x, y) = station.get_location()
+            if (x, y) not in points_arr:
+                self.canvas.create_text(x, y - 10, text=str((x, y)))
+                points_arr.append((x, y))
+
+            id_map = self.canvas.create_oval(x - station_width, y - station_width,
+                                             x + station_width, y + station_width, fill='#4571EC')
+            id_text = self.canvas.create_text(x, y + 15, text=station.get_use())
+            station.id_text_object = id_text
+            station.id_object = id_map
+            # self.canvas.create_image(x, y, image=images['station'])
+        for parking in self.generator.parking_lot:
+            (x, y) = parking.get_location()
+            self.canvas.create_oval(x - station_width, y - station_width,
+                                    x + station_width, y + station_width, fill='#000000')
+            id_text = self.canvas.create_text(x-16, y + 10, text=str(parking.get_use())+"/"+str(parking.get_capacity()))
+            parking.id_text_object = id_text
+
+    def start(self):
+        # print("Starting Simulation...")
+        if not self.active:
+            self.canvas.delete('all')
+            self.data_resume = []
+            self.generator.load_map()
+            self.active = True
+            self.paint_map()
+            self.btn_start.configure(state='disabled')
+
+        for bus in self.generator.buses:
+            bus_route = bus.get_route()
+
+            paths = copy(bus_route.get_paths())
+            initial_path = paths[0]
+            del paths[0]
+            (x1, y1) = initial_path.get_start_point()
+
+            # pid = self.canvas.create_image(x1, y1, image=self.images.get_images()['train'])
+            pid = self.canvas.create_oval(x1 - 5, y1 - 5, x1 + 5, y1 + 5, fill=bus.color)
+            bus.set_id(pid)
+            animation_object = AnimationObject(x1, y1, initial_path, paths, bus, pid)
+            self.after(1000, self.animate_route, animation_object)
+
+    def pause(self):
+        self.btn_start.configure(state='active')
+        self.data_resume = []
+        self.active = False
+
+    def resume(self):
+        self.btn_start.configure(state='disabled')
+        self.active = True
+        for obj in self.data_resume:
+            self.animate_route(obj)
 
     def animate_route(self, animation_object: AnimationObject, fun=None):
         """print(self.canvas.coords(animation_object.id_object))
@@ -313,71 +457,6 @@ class Application(tk.Frame):
                                                                           path_y1 - 5, path_x1 + 5, path_y1 + 5))
         else:
             self.data_resume.append(animation_object)
-
-    def paint_map(self):
-        # images = self.images.get_images()
-        paths = self.generator.map_paths
-        station_width = 5
-        for path in paths:
-            (x_init, y_init) = path.get_start_point()
-            (x_end, y_end) = path.get_end_point()
-            type_path = path.get_path_type()
-
-            if type_path == PathType.HORIZONTAL:
-                self.canvas.create_line(x_init, y_init, x_end, y_end)
-            elif type_path == PathType.VERTICAL:
-                self.canvas.create_line(x_init, y_init, x_end, y_end)
-            elif type_path == PathType.DIAGONAL:
-                self.canvas.create_line(x_init, y_init, x_end, y_end)
-        for station in self.generator.stations:
-            (x, y) = station.get_location()
-            id_map = self.canvas.create_oval(x - station_width, y - station_width,
-                                             x + station_width, y + station_width, fill='#4571EC')
-            id_text = self.canvas.create_text(x, y + 15, text=station.get_use())
-            station.id_text_object = id_text
-            station.id_object = id_map
-            # self.canvas.create_image(x, y, image=images['station'])
-        for parking in self.generator.parking_lot:
-            (x, y) = parking.get_location()
-            self.canvas.create_oval(x - station_width, y - station_width,
-                                    x + station_width, y + station_width, fill='#000000')
-            id_text = self.canvas.create_text(x-16, y + 10, text=str(parking.get_use())+"/"+str(parking.get_capacity()))
-            parking.id_text_object = id_text
-
-    def start(self):
-        # print("Starting Simulation...")
-        if not self.active:
-            self.canvas.delete('all')
-            self.data_resume = []
-            self.generator.load_map()
-            self.active = True
-            self.paint_map()
-            self.btn_start.configure(state='disabled')
-
-        for bus in self.generator.buses:
-            bus_route = bus.get_route()
-
-            paths = copy(bus_route.get_paths())
-            initial_path = paths[0]
-            del paths[0]
-            (x1, y1) = initial_path.get_start_point()
-
-            # pid = self.canvas.create_image(x1, y1, image=self.images.get_images()['train'])
-            pid = self.canvas.create_oval(x1 - 5, y1 - 5, x1 + 5, y1 + 5, fill=bus.color)
-            bus.set_id(pid)
-            animation_object = AnimationObject(x1, y1, initial_path, paths, bus, pid)
-            self.after(1000, self.animate_route, animation_object)
-
-    def pause(self):
-        self.btn_start.configure(state='active')
-        self.data_resume = []
-        self.active = False
-
-    def resume(self):
-        self.btn_start.configure(state='disabled')
-        self.active = True
-        for obj in self.data_resume:
-            self.animate_route(obj)
 
 
 class GUI(ObserverLogic):

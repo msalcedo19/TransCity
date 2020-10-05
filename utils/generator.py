@@ -54,37 +54,70 @@ class Generator(Observer):
 
     def load_map_paths(self):
         # Caminos Horizontales
-        path0 = MapPath(start=(self.start_x_map, self.start_y_map), end=(self.end_x_map, self.start_y_map),
-                        path_type=PathType.HORIZONTAL)
-        path1 = MapPath(start=(self.start_x_map, (self.end_y_map+self.start_y_map)/2),
-                        end=(self.end_x_map, (self.end_y_map+self.start_y_map)/2),
-                        path_type=PathType.HORIZONTAL)
-        path2 = MapPath(start=(self.start_x_map, self.end_y_map), end=(self.end_x_map, self.end_y_map),
-                        path_type=PathType.HORIZONTAL)
+        path0_hrzs = MapPath(start=(self.start_x_map, self.start_y_map),
+                             end=((self.end_x_map+self.start_x_map)/2, self.start_y_map),
+                             path_type=PathType.HORIZONTAL)
+        path1_hrzs = MapPath(start=((self.end_x_map+self.start_x_map)/2, self.start_y_map),
+                             end=(self.end_x_map, self.start_y_map),
+                             path_type=PathType.HORIZONTAL)
+
+        path2_hrzs = MapPath(start=(self.start_x_map, (self.end_y_map+self.start_y_map)/2),
+                             end=((self.end_x_map+self.start_x_map)/2, (self.end_y_map+self.start_y_map)/2),
+                             path_type=PathType.HORIZONTAL)
+        path3_hrzs = MapPath(start=((self.end_x_map+self.start_x_map)/2, (self.end_y_map+self.start_y_map)/2),
+                             end=(self.end_x_map, (self.end_y_map+self.start_y_map)/2),
+                             path_type=PathType.HORIZONTAL)
+
+        path4_hrzs = MapPath(start=(self.start_x_map, self.end_y_map),
+                             end=((self.end_x_map+self.start_x_map)/2, self.end_y_map),
+                             path_type=PathType.HORIZONTAL)
+        path5_hrzs = MapPath(start=((self.end_x_map+self.start_x_map)/2, self.end_y_map),
+                             end=(self.end_x_map, self.end_y_map),
+                             path_type=PathType.HORIZONTAL)
 
         # Caminos Verticales
-        path3 = MapPath(start=(self.start_x_map, self.start_y_map),
-                        end=(self.start_x_map, self.end_y_map), path_type=PathType.VERTICAL)
-        path4 = MapPath(start=((self.end_x_map+self.start_x_map)/2, self.start_y_map),
-                        end=((self.end_x_map+self.start_x_map)/2, self.end_y_map), path_type=PathType.VERTICAL)
-        path5 = MapPath(start=(self.end_x_map, self.start_y_map),
-                        end=(self.end_x_map, self.end_y_map), path_type=PathType.VERTICAL)
+        path0_vert = MapPath(start=(self.start_x_map, self.start_y_map),
+                             end=(self.start_x_map, (self.end_y_map+self.start_y_map)/2), path_type=PathType.VERTICAL)
+        path1_vert = MapPath(start=(self.start_x_map, (self.end_y_map+self.start_y_map)/2),
+                             end=(self.start_x_map, self.end_y_map), path_type=PathType.VERTICAL)
+
+        path2_vert = MapPath(start=((self.end_x_map+self.start_x_map)/2, self.start_y_map),
+                             end=((self.end_x_map+self.start_x_map)/2, (self.end_y_map+self.start_y_map)/2),
+                             path_type=PathType.VERTICAL)
+        path3_vert = MapPath(start=((self.end_x_map+self.start_x_map)/2, (self.end_y_map+self.start_y_map)/2),
+                             end=((self.end_x_map+self.start_x_map)/2, self.end_y_map), path_type=PathType.VERTICAL)
+
+        path4_vert = MapPath(start=(self.end_x_map, self.start_y_map),
+                             end=(self.end_x_map, (self.end_y_map+self.start_y_map)/2), path_type=PathType.VERTICAL)
+        path5_vert = MapPath(start=(self.end_x_map, (self.end_y_map+self.start_y_map)/2),
+                             end=(self.end_x_map, self.end_y_map), path_type=PathType.VERTICAL)
 
         # Caminos Diagonales
-        path6 = MapPath(start=(self.start_x_map, self.start_y_map),
-                        end=(self.end_x_map, self.end_y_map), path_type=PathType.DIAGONAL)
-        path7 = MapPath(start=(self.start_x_map, self.end_y_map),
-                        end=(self.end_x_map, self.start_y_map), path_type=PathType.DIAGONAL)
+        path0_diag = MapPath(start=(self.start_x_map, self.start_y_map),
+                             end=((self.end_x_map+self.start_x_map)/2, (self.end_y_map+self.start_y_map)/2),
+                             path_type=PathType.DIAGONAL)
+        path1_diag = MapPath(start=((self.end_x_map+self.start_x_map)/2, (self.end_y_map+self.start_y_map)/2),
+                             end=(self.end_x_map, self.end_y_map), path_type=PathType.DIAGONAL)
+        path2_diag = MapPath(start=(self.start_x_map, self.end_y_map),
+                             end=(self.end_x_map, self.start_y_map), path_type=PathType.DIAGONAL)
 
-        self.map_paths.append(path0)
-        self.map_paths.append(path1)
-        self.map_paths.append(path2)
-        self.map_paths.append(path3)
+        self.map_paths.append(path0_hrzs)
+        self.map_paths.append(path1_hrzs)
+        self.map_paths.append(path2_hrzs)
+        self.map_paths.append(path3_hrzs)
+        self.map_paths.append(path4_hrzs)
+        self.map_paths.append(path5_hrzs)
 
-        self.map_paths.append(path4)
-        self.map_paths.append(path5)
-        self.map_paths.append(path6)
-        self.map_paths.append(path7)
+        self.map_paths.append(path0_vert)
+        self.map_paths.append(path1_vert)
+        self.map_paths.append(path2_vert)
+        self.map_paths.append(path3_vert)
+        self.map_paths.append(path4_vert)
+        self.map_paths.append(path5_vert)
+
+        self.map_paths.append(path0_diag)
+        self.map_paths.append(path1_diag)
+        self.map_paths.append(path2_diag)
 
     def load_routes(self):
         path0_route1 = Path(start=(40, 40), end=(40, height_canvas / 2))
@@ -103,8 +136,9 @@ class Generator(Observer):
         path3_route2 = Path(start=stn.get_location(), end=(width_canvas - 40, 40))
         path4_route2 = Path(start=(width_canvas - 40, 40), end=(width_canvas - 40, height_canvas - 40))
 
-        path0_route3 = Path(start=(40, 40), end=(width_canvas / 4, height_canvas / 4))
-        path1_route3 = Path(start=(width_canvas / 4, height_canvas / 4), end=(width_canvas / 2, height_canvas / 2))
+        (x_med, y_med) = ((self.end_x_map + self.start_x_map) / 2, (self.end_y_map + self.start_y_map) / 2)
+        path0_route3 = Path(start=(40, 40), end=(x_med / 2, y_med / 2))
+        path1_route3 = Path(start=(x_med / 2, y_med / 2), end=(x_med, y_med))
         stn: Station = self.stations[1]
         path2_route3 = Path(start=(width_canvas / 2, height_canvas / 2), end=stn.get_location(),
                             station=self.stations[1])
