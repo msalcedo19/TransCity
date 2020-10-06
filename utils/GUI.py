@@ -6,7 +6,8 @@ from copy import copy
 import math as mt
 from const import width_screen, height_screen, height_canvas, width_canvas
 from entities.path import MoveTypeV2, PathType, Path
-from entities.station import StationType
+from entities.bus import Bus
+from entities.station import StationType, Station
 from functools import partial
 from entities.route import Route
 
@@ -51,12 +52,26 @@ class Application(tk.Frame):
     def __init__(self, master: tk.Tk, generator: Generator):
         super().__init__(master)
         self.active = False
-        self.data_resume = []
+        self.isPause = False
+        self.data_resume = {'stations': [], 'resume': []}
         self.master = master
         self.generator = generator
         self.images = ImagesController()
         self.pack()
         self.create_widgets()
+
+    def rebuild(self):
+        self.panel.destroy()
+        self.panel = tk.Frame(self, bg="gray")
+        self.panel.columnconfigure(0, minsize=260, weight=1)
+        self.panel.rowconfigure(1, pad=50)
+        self.panel.rowconfigure(3, pad=50)
+        self.panel.grid(row=0, column=0, sticky="nsew")
+
+        self.create_buttons_simulation()
+        self.create_buttons_buses()
+        self.create_buttons_stations()
+        self.create_buttons_routes()
 
     def create_buttons_simulation(self):
         panel_simulation = tk.Frame(self.panel)
@@ -96,15 +111,56 @@ class Application(tk.Frame):
         panel_title_stations.grid(row=0, columnspan=3)
 
         cant_btn = 0
-        for i in range(0, mt.ceil(len(stations)/3)):
+        fin_i = 0
+        fin_j = 0
+        for i in range(1, mt.ceil(len(stations)/3)+1):
+            fin_i += 1
             for j in range(0, 3):
+                fin_j = j
                 if cant_btn < len(stations):
                     btn = tk.Button(panel_stations, text="Station {}".format(cant_btn+1),
                                     command=partial(self.show_info_station, cant_btn))
-                    btn.grid(row=i+1, column=j, sticky='ew')
+                    btn.grid(row=i, column=j, sticky='ew')
                     cant_btn += 1
 
+        if fin_j == 2:
+            fin_j = 0
+            fin_i += 1
+        btn = tk.Button(panel_stations, text="Add stn", command=lambda: create_station())
+        btn.grid(row=fin_i, column=fin_j, sticky='ew')
+
         panel_stations.grid(row=2, sticky="ew")
+
+        def create_station():
+            width_screen_route = 300
+            height_screen_route = 180
+            create_station_window = tk.Toplevel(self)
+            create_station_window.geometry("{}x{}+600+300".format(width_screen_route, height_screen_route))
+
+            frame1 = tk.Frame(create_station_window)
+            frame2 = tk.Frame(create_station_window)
+            create_station_window.columnconfigure(0, minsize=width_screen_route/2, weight=1)
+            create_station_window.columnconfigure(1, minsize=width_screen_route/2, weight=1)
+
+            x_input = tk.Entry(frame1, width=5)
+            x_input.pack(expand="yes")
+            y_input = tk.Entry(frame1, width=5)
+            y_input.pack(expand="yes")
+
+            def complete():
+                stn = Station(location=(int(x_input.get()), int(y_input.get())),
+                              use=50, capacity=100, stn_type=StationType.STATION)
+                self.generator.stations.append(stn)
+
+                create_station_window.destroy()
+                panel_stations.grid_forget()
+                self.create_buttons_stations()
+
+            complete_btn = tk.Button(frame1, width=5, text="Complete", command=partial(complete))
+            complete_btn.pack(expand="yes")
+
+            frame1.grid(row=0, column=0)
+            frame2.grid(row=0, column=1)
 
     def show_info_station(self, index):
         station = self.generator.stations[index]
@@ -146,15 +202,65 @@ class Application(tk.Frame):
         panel_title_buses.grid(row=0, columnspan=3)
 
         cant_btn = 0
-        for i in range(0, mt.ceil(len(buses)/3)):
+        fin_i = 0
+        fin_j = 0
+        for i in range(1, mt.ceil(len(buses)/3)+1):
+            fin_i += 1
             for j in range(0, 3):
+                fin_j = j
                 if cant_btn < len(buses):
                     btn = tk.Button(panel_buses, text="Bus {}".format(cant_btn+1),
                                     command=partial(self.show_info_bus, cant_btn))
-                    btn.grid(row=i+1, column=j, sticky='ew')
+                    btn.grid(row=i, column=j, sticky='ew')
                     cant_btn += 1
+        if fin_j == 2:
+            fin_j = 0
+            fin_i += 1
+        btn = tk.Button(panel_buses, text="Add bus", command=lambda: create_bus())
+        btn.grid(row=fin_i, column=fin_j, sticky='ew')
 
         panel_buses.grid(row=1, sticky="ew")
+
+        def create_bus():
+            width_screen_route = 300
+            height_screen_route = 180
+            create_bus_window = tk.Toplevel(self)
+            create_bus_window.geometry("{}x{}+600+300".format(width_screen_route, height_screen_route))
+
+            v = tk.IntVar()
+            v.set(0)
+
+            routes = self.generator.routes
+
+            def show_choice():
+                print(v.get())
+
+            tk.Label(create_bus_window,
+                     text="""Choose the route""",
+                     justify=tk.LEFT,
+                     padx=20).pack()
+
+            for index_route in range(0, len(routes)):
+                tk.Radiobutton(create_bus_window,
+                               text="Route {}".format(index_route+1),
+                               padx=20,
+                               variable=v,
+                               command=show_choice,
+                               value=index_route).pack(anchor=tk.W)
+            speed_input = tk.Entry(create_bus_window, width=5)
+            speed_input.pack(expand="yes")
+
+            def complete():
+                bus = Bus(parking=self.generator.parking_lot[0], capacity=50, use=15, speed=int(speed_input.get()))
+                bus.set_route(routes[v.get()])
+                self.generator.buses.append(bus)
+                panel_buses.grid_forget()
+                create_bus_window.destroy()
+                panel_buses.grid_forget()
+                self.create_buttons_buses()
+
+            complete_btn = tk.Button(create_bus_window, width=5, text="Complete", command=partial(complete))
+            complete_btn.pack(expand="yes")
 
     def show_info_bus(self, index):
 
@@ -215,10 +321,67 @@ class Application(tk.Frame):
         if fin_j == 2:
             fin_j = 0
             fin_i += 1
-        btn = tk.Button(panel_routes, text="Añadir Ruta")
+        btn = tk.Button(panel_routes, text="Add route", command=lambda: create_route())
         btn.grid(row=fin_i, column=fin_j, sticky='ew')
 
         panel_routes.grid(row=3, sticky="ew")
+
+        def create_route():
+            width_screen_route = 300
+            height_screen_route = 180
+            create_route_window = tk.Toplevel(self)
+            create_route_window.geometry("{}x{}+600+300".format(width_screen_route, height_screen_route))
+
+            frame1 = tk.Frame(create_route_window)
+            frame2 = tk.Frame(create_route_window)
+            create_route_window.columnconfigure(0, minsize=width_screen_route/2, weight=1)
+            create_route_window.columnconfigure(1, minsize=width_screen_route/2, weight=1)
+
+            x_input = tk.Entry(frame1, width=5)
+            x_input.pack(expand="yes")
+            y_input = tk.Entry(frame1, width=5)
+            y_input.pack(expand="yes")
+
+            scrollbar = tk.Scrollbar(frame2)
+            scrollbar.pack(side='right', fill='y')
+            listbox = tk.Listbox(frame2, yscrollcommand=scrollbar.set)
+            listbox.pack(side='left', fill='both')
+
+            scrollbar.config(command=listbox.yview)
+
+            def add_point(value1: tk.Entry, value2: tk.Entry):
+                val1 = int(value1.get())
+                val2 = int(value2.get())
+                listbox.insert(0, str((val1, val2)))
+                value1.delete(first=0, last=5)
+                value2.delete(first=0, last=5)
+
+            def complete():
+                route = Route()
+                end_point = None
+                for index in range(0, listbox.size()):
+                    arr = listbox.get(first=index).replace(')', "")
+                    arr = arr.replace('(', "")
+                    arr = arr.replace(' ', "")
+                    arr = arr.split(',')
+                    if not end_point:
+                        end_point = (int(arr[0]), int(arr[1]))
+                    else:
+                        new_path = Path(start=(int(arr[0]), int(arr[1])), end=end_point)
+                        route.add_path(new_path)
+                        end_point = None
+                self.generator.routes.append(route)
+                panel_routes.grid_forget()
+                self.create_buttons_routes()
+                create_route_window.destroy()
+
+            add_btn = tk.Button(frame1, width=5, text="add", command=partial(add_point, x_input, y_input))
+            add_btn.pack(expand="yes")
+            complete_btn = tk.Button(frame1, width=5, text="Complete", command=partial(complete))
+            complete_btn.pack(expand="yes")
+
+            frame1.grid(row=0, column=0)
+            frame2.grid(row=0, column=1)
 
     def show_info_route(self, index):
         routes: Route = self.generator.routes[index]
@@ -290,7 +453,14 @@ class Application(tk.Frame):
                 self.canvas.create_line(x_init, y_init, x_end, y_end, width=2)
             elif type_path == PathType.DIAGONAL:
                 self.canvas.create_line(x_init, y_init, x_end, y_end, width=2)
-        for station in self.generator.stations:
+
+        stations = None
+        if len(self.data_resume['stations']) == 0:
+            stations = self.generator.stations
+        else:
+            stations = self.data_resume['stations']
+            self.data_resume = {'stations': [], 'resume': []}
+        for station in stations:
             (x, y) = station.get_location()
             if (x, y) not in points_arr:
                 self.canvas.create_text(x, y - 10, text=str((x, y)))
@@ -301,6 +471,7 @@ class Application(tk.Frame):
             id_text = self.canvas.create_text(x, y + 15, text=station.get_use())
             station.id_text_object = id_text
             station.id_object = id_map
+            self.data_resume['stations'].append(copy(station))
             # self.canvas.create_image(x, y, image=images['station'])
         for parking in self.generator.parking_lot:
             (x, y) = parking.get_location()
@@ -311,10 +482,15 @@ class Application(tk.Frame):
 
     def start(self):
         # print("Starting Simulation...")
-        if not self.active:
+        if not self.active and not self.isPause:
             self.canvas.delete('all')
-            self.data_resume = []
+            self.data_resume = {'stations': [], 'resume': []}
             self.generator.load_map()
+            self.active = True
+            self.paint_map()
+            self.btn_start.configure(state='disabled')
+        elif not self.active and self.isPause:
+            self.canvas.delete('all')
             self.active = True
             self.paint_map()
             self.btn_start.configure(state='disabled')
@@ -335,14 +511,15 @@ class Application(tk.Frame):
 
     def pause(self):
         self.btn_start.configure(state='active')
-        self.data_resume = []
         self.active = False
+        self.isPause = True
 
     def resume(self):
         self.btn_start.configure(state='disabled')
         self.active = True
-        for obj in self.data_resume:
+        for obj in self.data_resume['resume']:
             self.animate_route(obj)
+        self.data_resume = {'stations': [], 'resume': []}
 
     def animate_route(self, animation_object: AnimationObject, fun=None):
         """print(self.canvas.coords(animation_object.id_object))
@@ -456,7 +633,7 @@ class Application(tk.Frame):
                                            lambda pid: self.canvas.coords(pid, path_x1 - 5,
                                                                           path_y1 - 5, path_x1 + 5, path_y1 + 5))
         else:
-            self.data_resume.append(animation_object)
+            self.data_resume['resume'].append(animation_object)
 
 
 class GUI(ObserverLogic):

@@ -31,10 +31,10 @@ class Generator(Observer):
 
     def load_map(self):
         if self.__loaded:
-            self.buses = []
-            self.routes = []
             self.map_paths = []
             self.stations = []
+            self.routes = []
+            self.buses = []
             self.parking_lot = []
         self.load_map_paths()
         self.load_stations()
