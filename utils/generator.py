@@ -93,13 +93,30 @@ class Generator(Observer):
                              end=(self.end_x_map, self.end_y_map), path_type=PathType.VERTICAL)
 
         # Caminos Diagonales
+        (x_med, y_med) = ((self.end_x_map + self.start_x_map) / 2, (self.end_y_map + self.start_y_map) / 2)
         path0_diag = MapPath(start=(self.start_x_map, self.start_y_map),
-                             end=((self.end_x_map+self.start_x_map)/2, (self.end_y_map+self.start_y_map)/2),
+                             end=((x_med+self.start_x_map)/2, (y_med+self.start_y_map)/2),
                              path_type=PathType.DIAGONAL)
-        path1_diag = MapPath(start=((self.end_x_map+self.start_x_map)/2, (self.end_y_map+self.start_y_map)/2),
+        path1_diag = MapPath(start=((x_med+self.start_x_map)/2, (y_med+self.start_y_map)/2),
+                             end=(x_med, y_med),
+                             path_type=PathType.DIAGONAL)
+        path2_diag = MapPath(start=(x_med, y_med),
+                             end=((x_med+self.end_x_map)/2, (y_med+self.end_y_map)/2),
+                             path_type=PathType.DIAGONAL)
+        path3_diag = MapPath(start=((x_med+self.end_x_map)/2, (y_med+self.end_y_map)/2),
                              end=(self.end_x_map, self.end_y_map), path_type=PathType.DIAGONAL)
-        path2_diag = MapPath(start=(self.start_x_map, self.end_y_map),
-                             end=(self.end_x_map, self.start_y_map), path_type=PathType.DIAGONAL)
+
+        path4_diag = MapPath(start=(self.end_x_map, self.start_y_map),
+                             end=((x_med+self.end_x_map)/2, (y_med+self.start_y_map)/2),
+                             path_type=PathType.DIAGONAL)
+        path5_diag = MapPath(start=((x_med+self.end_x_map)/2, (y_med+self.start_y_map)/2),
+                             end=(x_med, y_med),
+                             path_type=PathType.DIAGONAL)
+        path6_diag = MapPath(start=(x_med, y_med),
+                             end=((x_med+self.start_x_map)/2, (y_med+self.end_y_map)/2),
+                             path_type=PathType.DIAGONAL)
+        path7_diag = MapPath(start=((x_med+self.start_x_map)/2, (y_med+self.end_y_map)/2),
+                             end=(self.start_x_map, self.end_y_map), path_type=PathType.DIAGONAL)
 
         self.map_paths.append(path0_hrzs)
         self.map_paths.append(path1_hrzs)
@@ -118,6 +135,11 @@ class Generator(Observer):
         self.map_paths.append(path0_diag)
         self.map_paths.append(path1_diag)
         self.map_paths.append(path2_diag)
+        self.map_paths.append(path3_diag)
+        self.map_paths.append(path4_diag)
+        self.map_paths.append(path5_diag)
+        self.map_paths.append(path6_diag)
+        self.map_paths.append(path7_diag)
 
     def load_routes(self):
         path0_route1 = Path(start=(40, 40), end=(40, height_canvas / 2))
