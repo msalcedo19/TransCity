@@ -21,6 +21,7 @@ class AnimationObject:
         self.paths_left = paths_left
         self.actual_bus = actual_bus
         self.id_object = id_object
+        self.actual_type_path = MoveTypeV2.DIAG_DER_ABJ
 
     def set_value(self, **kwargs):
         if kwargs.get('x'):
@@ -432,7 +433,7 @@ class Application(tk.Frame):
     def create_widgets(self):
         self.rowconfigure(0, minsize=720, weight=1)
         self.columnconfigure(0, minsize=260, weight=1)
-        self.canvas = tk.Canvas(self, width=width_canvas, bg='white')
+        self.canvas = tk.Canvas(self, width=width_canvas, bg='gray55')
         self.canvas.grid(row=0, column=1, sticky="ns")
 
         self.panel = tk.Frame(self, bg="gray")
@@ -448,7 +449,7 @@ class Application(tk.Frame):
 
     def paint_map(self):
         # images = self.images.get_images()
-        paths = self.generator.map_paths
+        """paths = self.generator.map_paths
         station_width = 5
 
         for path in paths:
@@ -490,11 +491,35 @@ class Application(tk.Frame):
             self.canvas.create_oval(x - station_width, y - station_width,
                                     x + station_width, y + station_width, fill='#000000')
             id_text = self.canvas.create_text(x-16, y + 10, text=str(parking.get_use())+"/"+str(parking.get_capacity()))
-            parking.id_text_object = id_text
+            parking.id_text_object = id_text"""
+        def create_path(*coordenates):
+            self.canvas.create_line(*coordenates, width=15, fill="white", joinstyle=tk.ROUND,
+                                    capstyle=tk.ROUND)
+            self.canvas.create_line(*coordenates, width=1, fill="black", joinstyle=tk.ROUND,
+                                    dash=(3, 1))
+        paths = self.generator.map_paths
+        for path in paths:
+            (x0, y0) = path[0]
+            (x1, y1) = path[1]
+            create_path(x0, y0, x1, y1)
+            if (x0, y0 - 10) not in self.coords:
+                self.coords.append((x0, y0 - 10))
+            if (x1, y1 - 10) not in self.coords:
+                self.coords.append((x1, y1 - 10))
+
+        def create_station(x, y):
+            station_width = 8
+            self.canvas.create_oval(x - station_width, y - station_width,
+                                    x + station_width, y + station_width, fill="green")
+
+        stations = self.generator.stations
+        for stn in stations:
+            (x0, y0) = stn.get_location()
+            create_station(x0, y0)
 
     def start(self):
         # print("Starting Simulation...")
-        if not self.active and not self.isPause:
+        """if not self.active and not self.isPause:
             self.canvas.delete('all')
             self.data_resume = {'stations': [], 'resume': []}
             self.generator.load_map()
@@ -520,6 +545,57 @@ class Application(tk.Frame):
 
             # pid = self.canvas.create_image(x1, y1, image=self.images.get_images()['train'])
             pid = self.canvas.create_oval(x1 - 5, y1 - 5, x1 + 5, y1 + 5, fill=bus.color)
+            bus.set_id(pid)
+            animation_object = AnimationObject(x1, y1, initial_path, paths, bus, pid)
+            self.after(1000, self.animate_route, animation_object)"""
+
+        """def rotate(points, angle, center):
+    angle = math.radians(angle)
+    cos_val = math.cos(angle)
+    sin_val = math.sin(angle)
+    cx, cy = center
+    new_points = []
+    for x_old, y_old in points:
+        x_old -= cx
+        y_old -= cy
+        x_new = x_old * cos_val - y_old * sin_val
+        y_new = x_old * sin_val + y_old * cos_val
+        new_points.append([x_new + cx, y_new + cy])
+    return new_points"""
+        # create_path(40, 360, 700, 560, 700, 160)
+        # bus_heigth = 9
+        # bus_width = 5
+        # pid = self.canvas.create_rectangle(702, 160, 702 + bus_width, 160 + bus_heigth)
+
+        if not self.active and not self.isPause:
+            self.canvas.delete('all')
+            self.data_resume = {'stations': [], 'resume': []}
+            self.active = True
+            self.paint_map()
+            self.btn_start.configure(state='disabled')
+            self.btn_stop.configure(state='active')
+        elif not self.active and self.isPause:
+            self.canvas.delete('all')
+            self.active = True
+            self.paint_map()
+            self.btn_start.configure(state='disabled')
+            self.btn_stop.configure(state='active')
+            self.btn_resume.configure(state='disabled')
+
+        for bus in self.generator.buses:
+            bus_route = bus.get_route()
+
+            paths = copy(bus_route.get_paths())
+            initial_path = paths[0]
+            del paths[0]
+            (x1, y1) = initial_path.get_start_point()
+
+            # pid = self.canvas.create_image(x1, y1, image=self.images.get_images()['train'])
+            bus_heigth = 9
+            bus_width = 5
+            pid = self.canvas.create_polygon(x1, y1, x1 + bus_width, y1, x1 + bus_width,
+                                             y1 + bus_heigth, x1, y1 + bus_heigth, x1, y1,  fill='red')
+            # pid = self.canvas.create_rectangle(x1, y1, x1 + bus_width, y1 + bus_heigth)
             bus.set_id(pid)
             animation_object = AnimationObject(x1, y1, initial_path, paths, bus, pid)
             self.after(1000, self.animate_route, animation_object)
@@ -558,6 +634,42 @@ class Application(tk.Frame):
                 alpha_fun = (mt.asin((y_fin - y_init) / c))
             return alpha_fun
 
+        def rotate(points, angle, center):
+            angle = mt.radians(angle)
+            cos_val = mt.cos(angle)
+            sin_val = mt.sin(angle)
+            cx, cy = center
+
+            x0_old = points[0]
+            y0_old = points[1]
+            x0_old -= cx
+            y0_old -= cy
+            x0_new = x0_old * cos_val - y0_old * sin_val
+            y0_new = x0_old * sin_val + y0_old * cos_val
+
+            x1_old = points[2]
+            y1_old = points[3]
+            x1_old -= cx
+            y1_old -= cy
+            x1_new = x1_old * cos_val - y1_old * sin_val
+            y1_new = x1_old * sin_val + y1_old * cos_val
+
+            x2_old = points[2]
+            y2_old = points[3]
+            x2_old -= cx
+            y2_old -= cy
+            x2_new = x2_old * cos_val - y2_old * sin_val
+            y2_new = x2_old * sin_val + y2_old * cos_val
+
+            x3_old = points[2]
+            y3_old = points[3]
+            x3_old -= cx
+            y3_old -= cy
+            x3_new = x3_old * cos_val - y3_old * sin_val
+            y3_new = x3_old * sin_val + y3_old * cos_val
+
+            return [x0_new, y0_new, x1_new, y1_new, x2_new, y2_new, x3_new, y3_new]
+
         if self.active:
             # Atributos necesarios para realizar la animación
             id_image = animation_object.id_object
@@ -565,7 +677,6 @@ class Application(tk.Frame):
             y = animation_object.y
             path = animation_object.actual_path
             bus = animation_object.actual_bus
-
             # self.canvas.coords(id_image, (x, y))
             # self.canvas.coords(id_image, (x - 5, y - 5, x + 5, y + 5))
             if fun is not None:
@@ -575,22 +686,84 @@ class Application(tk.Frame):
             if path.path_state(x, y):
                 (x_final, y_final) = path.get_end_point()
                 if path.get_type_move() == MoveTypeV2.VERTICAL_ARRIBA:
+                    if animation_object.actual_type_path != MoveTypeV2.VERTICAL_ARRIBA:
+                        x0_ob = self.canvas.coords(id_image)[0]
+                        y0_ob = self.canvas.coords(id_image)[1]
+
+                        x1_ob = self.canvas.coords(id_image)[2]
+                        y1_ob = self.canvas.coords(id_image)[3]
+
+                        x2_ob = self.canvas.coords(id_image)[4]
+                        y2_ob = self.canvas.coords(id_image)[5]
+
+                        x3_ob = self.canvas.coords(id_image)[6]
+                        y3_ob = self.canvas.coords(id_image)[7]
+                        self.canvas.coords(id_image, x0_ob + 2, y0_ob, x1_ob + 1, y1_ob,
+                                           x2_ob + 1, y2_ob, x3_ob + 2, y3_ob)
+                        animation_object.actual_type_path = MoveTypeV2.VERTICAL_ARRIBA
                     animation_object.set_value(x=x, y=y - 1)
                     self.after(int(1000/bus.get_speed()), self.animate_route, animation_object,
                                lambda pid: self.canvas.move(pid, 0, -1))
                 elif path.get_type_move() == MoveTypeV2.VERTICAL_ABAJO:
+                    if animation_object.actual_type_path != MoveTypeV2.VERTICAL_ABAJO:
+                        x0_ob = self.canvas.coords(id_image)[0]
+                        y0_ob = self.canvas.coords(id_image)[1]
+
+                        x1_ob = self.canvas.coords(id_image)[2]
+                        y1_ob = self.canvas.coords(id_image)[3]
+
+                        x2_ob = self.canvas.coords(id_image)[4]
+                        y2_ob = self.canvas.coords(id_image)[5]
+
+                        x3_ob = self.canvas.coords(id_image)[6]
+                        y3_ob = self.canvas.coords(id_image)[7]
+                        self.canvas.coords(id_image, x0_ob + 2, y0_ob, x1_ob + 1, y1_ob,
+                                           x2_ob + 1, y2_ob, x3_ob + 2, y3_ob)
+                        animation_object.actual_type_path = MoveTypeV2.VERTICAL_ABAJO
                     animation_object.set_value(x=x, y=y + 1)
                     self.after(int(1000/bus.get_speed()), self.animate_route, animation_object,
                                lambda pid: self.canvas.move(pid, 0, 1))
                 elif path.get_type_move() == MoveTypeV2.HORIZONTAL_IZQUIERDA:
+                    if animation_object.actual_type_path != MoveTypeV2.HORIZONTAL_IZQUIERDA:
+                        x0_ob = self.canvas.coords(id_image)[0]
+                        y0_ob = self.canvas.coords(id_image)[1]
+
+                        x1_ob = self.canvas.coords(id_image)[2]
+                        y1_ob = self.canvas.coords(id_image)[3]
+
+                        x2_ob = self.canvas.coords(id_image)[4]
+                        y2_ob = self.canvas.coords(id_image)[5]
+
+                        x3_ob = self.canvas.coords(id_image)[6]
+                        y3_ob = self.canvas.coords(id_image)[7]
+                        self.canvas.coords(id_image, x0_ob, y0_ob - 6, x1_ob + 5, y1_ob - 6,
+                                           x2_ob + 5, y2_ob - 10, x3_ob, y3_ob - 10)
+                        animation_object.actual_type_path = MoveTypeV2.HORIZONTAL_IZQUIERDA
                     animation_object.set_value(x=x - 1, y=y)
                     self.after(int(1000/bus.get_speed()), self.animate_route, animation_object,
                                lambda pid: self.canvas.move(pid, -1, 0))
                 elif path.get_type_move() == MoveTypeV2.HORIZONTAL_DERECHA:
+                    if animation_object.actual_type_path != MoveTypeV2.HORIZONTAL_DERECHA:
+                        x0_ob = self.canvas.coords(id_image)[0]
+                        y0_ob = self.canvas.coords(id_image)[1]
+
+                        x1_ob = self.canvas.coords(id_image)[2]
+                        y1_ob = self.canvas.coords(id_image)[3]
+
+                        x2_ob = self.canvas.coords(id_image)[4]
+                        y2_ob = self.canvas.coords(id_image)[5]
+
+                        x3_ob = self.canvas.coords(id_image)[6]
+                        y3_ob = self.canvas.coords(id_image)[7]
+                        self.canvas.coords(id_image, x0_ob, y0_ob + 3, x1_ob + 5, y1_ob + 3,
+                                           x2_ob + 5, y2_ob - 2, x3_ob, y3_ob - 2)
+                        animation_object.actual_type_path = MoveTypeV2.HORIZONTAL_DERECHA
                     animation_object.set_value(x=x + 1, y=y)
                     self.after(int(1000/bus.get_speed()), self.animate_route, animation_object,
                                lambda pid: self.canvas.move(pid, 1, 0))
                 elif path.get_type_move() == MoveTypeV2.DIAG_IZQ_ARR:
+                    if animation_object.actual_type_path != MoveTypeV2.DIAG_IZQ_ARR:
+                        animation_object.actual_type_path = MoveTypeV2.DIAG_IZQ_ARR
                     (x_inicial, y_inicial) = path.get_start_point()
                     alpha = get_alpha(x_inicial, y_inicial, x_final, y_final)
                     vy = mt.sin(alpha) * 0.7071068
@@ -599,6 +772,8 @@ class Application(tk.Frame):
                     self.after(int(1000/bus.get_speed()), self.animate_route, animation_object,
                                lambda pid: self.canvas.move(pid, -vx, -vy))
                 elif path.get_type_move() == MoveTypeV2.DIAG_IZQ_ABJ:
+                    if animation_object.actual_type_path != MoveTypeV2.DIAG_IZQ_ABJ:
+                        animation_object.actual_type_path = MoveTypeV2.DIAG_IZQ_ABJ
                     (x_inicial, y_inicial) = path.get_start_point()
                     alpha = get_alpha(x_inicial, y_inicial, x_final, y_final)
                     vy = mt.sin(alpha) * 0.7071068
@@ -607,6 +782,8 @@ class Application(tk.Frame):
                     self.after(int(1000/bus.get_speed()), self.animate_route, animation_object,
                                lambda pid: self.canvas.move(pid, -vx, vy))
                 elif path.get_type_move() == MoveTypeV2.DIAG_DER_ARR:
+                    if animation_object.actual_type_path != MoveTypeV2.DIAG_DER_ARR:
+                        animation_object.actual_type_path = MoveTypeV2.DIAG_DER_ARR
                     (x_inicial, y_inicial) = path.get_start_point()
                     alpha = get_alpha(x_inicial, y_inicial, x_final, y_final)
                     vy = mt.sin(alpha) * 0.7071068
@@ -615,6 +792,8 @@ class Application(tk.Frame):
                     self.after(int(1000/bus.get_speed()), self.animate_route, animation_object,
                                lambda pid: self.canvas.move(pid, vx, -vy))
                 elif path.get_type_move() == MoveTypeV2.DIAG_DER_ABJ:
+                    if animation_object.actual_type_path != MoveTypeV2.DIAG_DER_ABJ:
+                        animation_object.actual_type_path = MoveTypeV2.DIAG_DER_ABJ
                     (x_inicial, y_inicial) = path.get_start_point()
                     alpha = get_alpha(x_inicial, y_inicial, x_final, y_final)
                     vy = mt.sin(alpha) * 0.7071068
@@ -644,13 +823,23 @@ class Application(tk.Frame):
                     del paths[0]
                     animation_object.set_value(x=path_x1, y=path_y1, actual_path=path, paths_left=paths, actual_bus=bus)
                     if station and station.get_type() == StationType.STATION:
+                        bus_heigth = 9
+                        bus_width = 5
                         self.after(1000, self.animate_route, animation_object,
-                                   lambda pid: self.canvas.coords(pid, path_x1 - 5,
-                                                                  path_y1 - 5, path_x1 + 5, path_y1 + 5))
+                                   lambda pid: self.canvas.coords(id_image, path_x1, path_y1, path_x1 + bus_width,
+                                                                  path_y1, path_x1 + bus_width, path_y1 + bus_heigth,
+                                                                  path_x1, path_y1 + bus_heigth, path_x1, path_y1))
                     else:
+                        bus_heigth = 9
+                        bus_width = 5
+                        animation_object.actual_type_path = None
                         self.animate_route(animation_object,
-                                           lambda pid: self.canvas.coords(pid, path_x1 - 5,
-                                                                          path_y1 - 5, path_x1 + 5, path_y1 + 5))
+                                           lambda pid: self.canvas.coords(id_image, path_x1, path_y1,
+                                                                          path_x1 + bus_width,
+                                                                          path_y1, path_x1 + bus_width,
+                                                                          path_y1 + bus_heigth,
+                                                                          path_x1, path_y1 + bus_heigth,
+                                                                          path_x1, path_y1))
         else:
             self.data_resume['resume'].append(animation_object)
 
