@@ -1,6 +1,5 @@
 from utils.generator import Generator
 from utils.GUI import GUI
-
 """Clase que representa al objeto bus.
 
     Devuelve en una tupla las dos raíces que resuelven la

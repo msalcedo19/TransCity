@@ -69,12 +69,28 @@ class Path:
     __startPoint: (int, int)
     __endPoint: (int, int)
     __station: Station
+    __block: bool
+    __code: int
 
-    def __init__(self, start: (int, int), end: (int, int) = None, station=None):
+    def __init__(self, start: (int, int), end: (int, int), code: int, station=None):
         self.__startPoint = start
         self.__endPoint = end
         self.__station = station
         self.define_move_type()
+        self.__block = False
+        self.__code = code
+
+    def get_code(self):
+        return self.__code
+
+    def block(self):
+        self.__block = True
+
+    def unblock(self):
+        self.__block = False
+
+    def is_block(self):
+        return self.__block
 
     def define_move_type(self):
         if self.__endPoint is None:
