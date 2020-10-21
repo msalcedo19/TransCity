@@ -13,6 +13,7 @@ class Station:
     __type: StationType
     __isClose: bool
     __code: int
+    __users: []
 
     def __init__(self, location: (int, int), use: int, capacity: int, code: int, stn_type: StationType = 1):
         self.__location = location
@@ -22,9 +23,24 @@ class Station:
         self.__type = stn_type
         self.__isClose = False
         self.__code = code
+        self.__users = []
 
         self.id_text_object = None
         self.id_object = None
+
+    def encode(self):
+        return dict(location=self.__location, capacity=self.__capacity)
+
+    def new_user(self, user):
+        self.__users.append(user)
+        self.increase_user()
+
+    def del_user(self, user):
+        self.__users.remove(user)
+        self.decrease_user()
+
+    def users(self):
+        return self.__users
 
     def get_code(self):
         return self.__code
@@ -50,8 +66,11 @@ class Station:
     def get_type(self):
         return self.__type
 
-    def increase_use(self):
+    def increase_user(self):
         self.__use += 1
+
+    def decrease_user(self):
+        self.__use -= 1
 
     def close(self):
         self.__isClose = True

@@ -12,9 +12,19 @@ padding_bottom_canvas = 40
 width_screen = 1270
 height_screen = 720
 
-# Ventana auxiliares
+# Ventanas auxiliares
 width_screen_route = 300
 height_screen_route = 180
+
+# Panel de Control
+width_panel = 270
+height_panel = 720
+
+# Posición Coordenadas
+up = 20
+
+# Tamaño Estaciones
+station_width = 8
 
 # Colores
 color1 = '#475D6B'

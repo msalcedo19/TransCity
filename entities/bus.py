@@ -1,5 +1,7 @@
 from entities.route import Route
 from entities.station import Station
+import json
+from json import JSONEncoder
 
 
 class Bus:
@@ -20,18 +22,35 @@ class Bus:
     __use: int
     __color: str
     __code: int
+    __users: []
 
     __id_object: int
 
-    def __init__(self, parking: Station, capacity: int, use: int, speed: float, color: str, code: int):
+    def __init__(self, parking: Station, capacity: int, use: int, speed: float, color: str, code: int, route: Route):
+        super().__init__()
         self.__speed = speed
-        self.__route = Route()
+        self.__route = route
         self.__parking = parking
         self.__capacity = capacity
         self.__use = use
         self.__color = color
         self.__id_object = None
         self.__code = code
+        self.__users = []
+
+    def encode(self):
+        return dict(code=self.__code, speed=self.__speed, route=self.__route.encode(), parking=self.__parking.encode())
+
+    def add_user(self, user):
+        self.__users.append(user)
+        self.increase_use()
+
+    def del_user(self, user):
+        self.__users.remove(user)
+        self.decrease_user()
+
+    def users(self):
+        return self.__users
 
     def set_id(self, id_bus: int):
         self.__id_object = id_bus
@@ -68,6 +87,12 @@ class Bus:
 
     def get_use(self):
         return self.__use
+
+    def increase_use(self):
+        self.__use += 1
+
+    def decrease_user(self):
+        self.__use -= 1
 
     def set_use(self, use: int):
         self.__use = use

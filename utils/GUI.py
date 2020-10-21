@@ -7,6 +7,8 @@ from core.envButtons import create_buttons_routes, create_buttons_stations, crea
 from core.envMap import paint_map
 from core.transitions import animate_route
 from const import *
+from utils.observer import Observer
+import threading
 
 
 class Application(tk.Frame):
@@ -36,6 +38,12 @@ class Application(tk.Frame):
         self.master = master
         self.pack()
         self.create_widgets()
+        self.t = None
+        paint_map(self)
+
+    def refresh(self):
+        self.canvas.delete('all')
+        paint_map(self)
 
     def create_widgets(self):
         self.rowconfigure(0, minsize=720, weight=1)
@@ -54,16 +62,17 @@ class Application(tk.Frame):
     def start(self):
 
         if not self.active and not self.isPause:
-            self.canvas.delete('all')
             self.data_resume = {'stations': [], 'resume': []}
             self.active = True
-            paint_map(self)
+            self.refresh()
             self.btn_start.configure(state='disabled')
             self.btn_stop.configure(state='active')
+            self.t = threading.Thread(target=self.generator.generate_passengers)
+            self.t.daemon = True
+            self.t.start()
         elif not self.active and self.isPause:
-            self.canvas.delete('all')
             self.active = True
-            paint_map(self)
+            self.refresh()
             self.btn_start.configure(state='disabled')
             self.btn_stop.configure(state='active')
             self.btn_resume.configure(state='disabled')
@@ -85,11 +94,12 @@ class Application(tk.Frame):
             self.after(1000, animate_route, self, animation_object)
 
     def pause(self):
-        self.btn_start.configure(state='active')
-        self.btn_resume.configure(state='active')
-        self.btn_stop.configure(state='disabled')
-        self.active = False
-        self.isPause = True
+        if self.active:
+            self.btn_start.configure(state='active')
+            self.btn_resume.configure(state='active')
+            self.btn_stop.configure(state='disabled')
+            self.active = False
+            self.isPause = True
 
     def resume(self):
         self.btn_start.configure(state='disabled')
@@ -100,15 +110,33 @@ class Application(tk.Frame):
             animate_route(self, obj)
         self.data_resume = {'stations': [], 'resume': []}
 
+    def log(self):
+        self.generator.log()
 
-class GUI:
+    def save(self):
+        self.generator.save()
+
+
+class GUI(Observer):
 
     def __init__(self, generator: Generator):
         super().__init__()
         root = tk.Tk(className='TransCity Simulator')
         root.geometry("{}x{}+50+50".format(width_screen, height_screen))
+
+        def on_closing():
+            self.generator.detach(self)
+            root.destroy()
+
+        root.protocol("WM_DELETE_WINDOW", on_closing)
         app = Application(master=root, generator=generator)
 
         self.tk = app
         self.generator = generator
+        self.generator.attach(self)
         app.mainloop()
+
+    def update(self, station) -> None:
+        self.tk.canvas.itemconfig(station.id_text_object, text=str(station.get_use()))
+
+

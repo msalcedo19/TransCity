@@ -13,8 +13,8 @@ def create_buttons_simulation(self):
     font_titles = tk_font.Font(family=family1, size=12, weight="bold")
 
     panel_simulation = tk.Frame(self.panel, bg=color1)
-    panel_simulation.columnconfigure(0, minsize=130, weight=1)
-    panel_simulation.columnconfigure(1, minsize=130, weight=1)
+    panel_simulation.columnconfigure(0, minsize=width_panel/2, weight=1)
+    panel_simulation.columnconfigure(1, minsize=width_panel/2, weight=1)
     panel_title = tk.Label(panel_simulation, text="Simulation", font=font_titles, bg=color5)
     panel_title.grid(row=0, columnspan=2, sticky=tk.EW)
 
@@ -36,7 +36,7 @@ def create_buttons_simulation(self):
         else:
             for coord in self.coords:
                 (x_end, y_end) = coord
-                pid = self.canvas.create_text(x_end, y_end, text=str((x_end, y_end + 10)))
+                pid = self.canvas.create_text(x_end, y_end, text=str((x_end, y_end + up)))
                 self.coordsId.append(pid)
 
     self.btn_stop = tk.Button(btn_col2, text="Stop", command=self.pause)
@@ -46,13 +46,26 @@ def create_buttons_simulation(self):
     btn_coord = tk.Button(btn_col2, text="Coord", command=lambda: show_coords())
     btn_coord.pack(fill=tk.X)
 
+    btn_log = tk.Button(btn_col1, text="Log", command=self.log)
+    btn_log.pack(fill=tk.X)
+
+    btn_save = tk.Button(btn_col2, text="Save", command=self.save)
+    btn_save.pack(fill=tk.X)
+
     btn_col1.grid(row=1, column=0, sticky=tk.NSEW)
     btn_col2.grid(row=1, column=1, sticky=tk.NSEW)
     panel_simulation.grid(row=0, sticky=tk.EW)
 
 
 def create_buttons_stations(self):
+
+    font_titles = tk_font.Font(family=family1, size=12, weight="bold")
+    font_info = tk_font.Font(family=family1, size=10)
+
     def show_info_station(index):
+
+        self.pause()
+
         station = self.generator.stations[index]
         self.canvas.itemconfig(station.id_object, fill='yellow')
 
@@ -64,8 +77,8 @@ def create_buttons_stations(self):
         panel_station_window.geometry("{}x{}+600+300".format(width_screen_route, height_screen_route))
         panel_station_window.protocol("WM_DELETE_WINDOW", on_closing)
 
-        panel_station_window.columnconfigure(0, minsize=130, weight=1)
-        panel_station_window.columnconfigure(1, minsize=130, weight=1)
+        panel_station_window.columnconfigure(0, minsize=width_panel/2, weight=1)
+        panel_station_window.columnconfigure(1, minsize=width_panel/2, weight=1)
 
         station_title = tk.Label(panel_station_window, text="Station {}".format(station.get_code()),
                                  font=font_titles, bg=color5)
@@ -73,9 +86,11 @@ def create_buttons_stations(self):
 
         info_frame = tk.Frame(panel_station_window)
 
-        passengers_info = tk.Label(info_frame, text="# Passengers:{}".format(station.get_use()), width=25)
+        passengers_info = tk.Label(info_frame, text="# Passengers:{}".format(station.get_use()), width=25,
+                                   font=font_info)
         passengers_info.grid(row=0)
-        capacity_info = tk.Label(info_frame, text="Max Capacity:{}".format(station.get_capacity()), width=25)
+        capacity_info = tk.Label(info_frame, text="Max Capacity:{}".format(station.get_capacity()), width=25,
+                                 font=font_info)
         capacity_info.grid(row=1)
 
         info_frame.grid(row=1, columnspan=2)
@@ -93,14 +108,27 @@ def create_buttons_stations(self):
         options_frame_change.grid(row=0, columnspan=2)"""
 
         def close_station(p_station: Station):
-            p_station.close()
+            if p_station.is_close():
+                p_station.open()
+                p_station.color = '#4571EC'
+                close_btn.configure(text="Close")
+            else:
+                p_station.close()
+                p_station.color = 'red'
+                close_btn.configure(text="Open")
 
-        close_btn = tk.Button(panel_station_window, text="Close", command=partial(close_station, station), width=13)
+        txt = 'Close'
+        if station.is_close():
+            txt = 'Open'
+        close_btn = tk.Button(panel_station_window, text=txt, command=partial(close_station, station), width=13)
         close_btn.grid(row=2, columnspan=2)
 
         # options_frame.grid(row=2, columnspan=2)
 
     def create_station():
+
+        self.pause()
+
         create_station_window = tk.Toplevel(self)
         create_station_window.geometry("{}x{}+600+300".format(width_screen_route, height_screen_route))
 
@@ -114,17 +142,17 @@ def create_buttons_stations(self):
 
         input_frame = tk.Frame(create_station_window)
 
-        x_input_text = tk.Label(input_frame, text='X')
+        x_input_text = tk.Label(input_frame, text='X', font=font_info)
         x_input_text.grid(row=1, column=0)
         x_input = tk.Entry(input_frame, width=5)
         x_input.grid(row=1, column=1)
 
-        y_input_text = tk.Label(input_frame, text='Y')
+        y_input_text = tk.Label(input_frame, text='Y', font=font_info)
         y_input_text.grid(row=2, column=0)
-        y_input = tk.Entry(input_frame, width=5)
+        y_input = tk.Entry(input_frame, width=5, font=font_info)
         y_input.grid(row=2, column=1)
 
-        use_input_text = tk.Label(input_frame, text='# Passengers')
+        use_input_text = tk.Label(input_frame, text='# Passengers', font=font_info)
         use_input_text.grid(row=3, column=0)
         use_input = tk.Entry(input_frame, width=5)
         use_input.grid(row=3, column=1)
@@ -145,6 +173,7 @@ def create_buttons_stations(self):
             create_station_window.destroy()
             panel_stations.grid_forget()
             create_buttons_stations(self)
+            self.refresh()
 
         options_input_frame = tk.Frame(create_station_window)
 
@@ -154,8 +183,6 @@ def create_buttons_stations(self):
         complete_btn.grid(row=2, column=1)
 
         options_input_frame.grid(row=2, columnspan=2)
-
-    font_titles = tk_font.Font(family=family1, size=12, weight="bold")
 
     panel_stations = tk.Frame(self.panel)
     panel_stations.columnconfigure(0, minsize=86, weight=1)
@@ -192,7 +219,12 @@ def create_buttons_stations(self):
 
 def create_buttons_buses(self):
 
+    font_titles = tk_font.Font(family=family1, size=12, weight="bold")
+    font_info = tk_font.Font(family=family1, size=10)
+
     def show_info_bus(index):
+
+        self.pause()
 
         def change_route():
             panel_bus_window.geometry("{}x{}+600+300".format(width_screen_route, height_screen_route+150))
@@ -226,7 +258,7 @@ def create_buttons_buses(self):
             complete = tk.Button(change_route_frame, text="Complete", command=lambda: change())
             complete.pack(expand="yes")
 
-            change_route_frame.pack(expand="yes")
+            change_route_frame.grid(row=3, columnspan=2)
 
         def change_parking():
             panel_bus_window.geometry("{}x{}+600+300".format(width_screen_route, height_screen_route+150))
@@ -260,7 +292,7 @@ def create_buttons_buses(self):
             complete = tk.Button(change_parking_frame, text="Complete", command=lambda: change())
             complete.pack(expand="yes")
 
-            change_parking_frame.pack(expand='yes')
+            change_parking_frame.grid(row=3, columnspan=2)
 
         bus = self.generator.buses[index]
         self.canvas.itemconfig(bus.get_id(), fill='yellow')
@@ -273,21 +305,22 @@ def create_buttons_buses(self):
         panel_bus_window.geometry("{}x{}+600+300".format(width_screen_route, height_screen_route))
         panel_bus_window.protocol("WM_DELETE_WINDOW", on_closing)
 
-        panel_bus_window.columnconfigure(0, minsize=130, weight=1)
-        panel_bus_window.columnconfigure(1, minsize=130, weight=1)
+        panel_bus_window.columnconfigure(0, minsize=width_panel/2, weight=1)
+        panel_bus_window.columnconfigure(1, minsize=width_panel/2, weight=1)
 
         bus_title = tk.Label(panel_bus_window, text="Bus {}".format(bus.get_code()), font=font_titles, bg=color5)
         bus_title.grid(row=0, columnspan=2, sticky=tk.EW)
 
         info_frame = tk.Frame(panel_bus_window)
 
-        speed_info = tk.Label(info_frame, text="Speed: {}".format(bus.get_speed()), width=25)
+        speed_info = tk.Label(info_frame, text="Speed: {}".format(bus.get_speed()), width=25, font=font_info)
         speed_info.grid(row=0)
-        capacity_info = tk.Label(info_frame, text="Capacity: {}".format(bus.get_capacity()), width=25)
+        capacity_info = tk.Label(info_frame, text="Capacity: {}".format(bus.get_capacity()), width=25, font=font_info)
         capacity_info.grid(row=1)
-        passengers_info = tk.Label(info_frame, text="# Passengers:{}".format(bus.get_use()), width=25)
+        passengers_info = tk.Label(info_frame, text="# Passengers:{}".format(bus.get_use()), width=25, font=font_info)
         passengers_info.grid(row=2)
-        passengers_info = tk.Label(info_frame, text="Parking:{}".format(bus.get_parking().get_code()), width=25)
+        passengers_info = tk.Label(info_frame, text="Parking:{}".format(bus.get_parking().get_code()), width=25,
+                                   font=font_info)
         passengers_info.grid(row=3)
 
         info_frame.grid(row=1, columnspan=2)
@@ -307,13 +340,25 @@ def create_buttons_buses(self):
         def finish_route_bus(p_bus: Bus):
             p_bus.get_route().block()
 
+        def del_bus(p_bus: Bus):
+            self.generator.buses.remove(p_bus)
+            panel_bus_window.destroy()
+            panel_buses.grid_forget()
+            create_buttons_buses(self)
+
         terminate_route = tk.Button(options_frame, text="Finish Route", command=partial(finish_route_bus, bus),
                                     width=13)
-        terminate_route.grid(row=1, columnspan=2)
+        terminate_route.grid(row=1, column=0)
+
+        del_bus_btn = tk.Button(options_frame, text="Delete", command=partial(del_bus, bus), width=13)
+        del_bus_btn.grid(row=1, column=1)
 
         options_frame.grid(row=2, columnspan=2)
 
     def create_bus():
+
+        self.pause()
+
         create_bus_window = tk.Toplevel(self)
         create_bus_window.geometry("{}x{}+600+300".format(width_screen_route, height_screen_route))
 
@@ -368,9 +413,13 @@ def create_buttons_buses(self):
         speed_input_frame.grid(row=1, columnspan=2, pady=10)
 
         def complete():
+            def r():
+                return random.randint(0, 255)
+            color_bus = '#%02X%02X%02X' % (r(), r(), r())
+
             bus = Bus(parking=self.generator.parking_lot[v2.get()], capacity=50,
-                      use=15, speed=int(speed_input.get()), color='C72402', code=len(self.generator.buses)+1)
-            bus.set_route(routes[v.get()])
+                      use=15, speed=int(speed_input.get()), color=color_bus, code=len(self.generator.buses)+1,
+                      route=routes[v.get()])
             self.generator.buses.append(bus)
             panel_buses.grid_forget()
             create_bus_window.destroy()
@@ -389,8 +438,6 @@ def create_buttons_buses(self):
         frame1.grid(row=0, column=0, sticky=tk.EW)
         frame2.grid(row=0, column=1, sticky=tk.EW)
 
-    font_titles = tk_font.Font(family=family1, size=12, weight="bold")
-
     panel_buses = tk.Frame(self.panel)
     panel_buses.columnconfigure(0, minsize=86, weight=1)
     panel_buses.columnconfigure(1, minsize=88, weight=1)
@@ -407,7 +454,7 @@ def create_buttons_buses(self):
             fin_i += 1
             for j in range(0, 3):
                 if cant_btn < len(buses):
-                    btn = tk.Button(panel_buses, text="Bus {}".format(buses[cant_btn].get_code()),
+                    btn = tk.Button(panel_buses, text="Bus {}".format(cant_btn+1),
                                     command=partial(show_info_bus, cant_btn))
                     btn.grid(row=i, column=j, sticky='ew')
                     cant_btn += 1
@@ -426,7 +473,13 @@ def create_buttons_buses(self):
 
 
 def create_buttons_routes(self):
+
+    font_titles = tk_font.Font(family=family1, size=12, weight="bold")
+
     def show_info_route(index):
+
+        self.pause()
+
         route: Route = self.generator.routes[index]
 
         lines_ids = []
@@ -450,19 +503,38 @@ def create_buttons_routes(self):
         panel_route_window.geometry("{}x{}+600+300".format(width_screen_route, height_screen_route))
         panel_route_window.protocol("WM_DELETE_WINDOW", on_closing)
 
-        panel_route_window.columnconfigure(0, minsize=130, weight=1)
-        panel_route_window.columnconfigure(1, minsize=130, weight=1)
+        panel_route_window.columnconfigure(0, minsize=width_panel/2, weight=1)
+        panel_route_window.columnconfigure(1, minsize=width_panel/2, weight=1)
 
         route_title = tk.Label(panel_route_window, text="Route {}".format(index + 1), font=font_titles, bg=color5)
         route_title.grid(row=0, columnspan=2, sticky=tk.EW)
 
         def block_route(p_route: Route):
-            p_route.block()
+            if p_route.is_block():
+                p_route.unblock()
+                block_btn.configure(text='Block')
+            else:
+                p_route.block()
+                block_btn.configure(text='Unblock')
 
-        block_btn = tk.Button(panel_route_window, text="Block", command=partial(block_route, route))
-        block_btn.grid(row=2, columnspan=2)
+        block_btn = tk.Button(panel_route_window, text="Block", command=partial(block_route, route), width=13)
+        block_btn.grid(row=2, column=0)
+
+        def del_route(p_route: Route):
+            for pid2 in lines_ids:
+                self.canvas.delete(pid2)
+            self.generator.routes.remove(p_route)
+            panel_route_window.destroy()
+            panel_routes.grid_forget()
+            create_buttons_routes(self)
+
+        del_route_btn = tk.Button(panel_route_window, text="Delete", command=partial(del_route, route), width=13)
+        del_route_btn.grid(row=2, column=1)
 
     def create_route():
+
+        self.pause()
+
         create_route_window = tk.Toplevel(self)
         create_route_window.geometry("{}x{}+600+300".format(width_screen_route+20, height_screen_route))
 
@@ -544,7 +616,7 @@ def create_buttons_routes(self):
             options_station_frame.pack(anchor=tk.W)
 
         def complete():
-            route = Route()
+            route = Route(code=len(self.generator.routes)+1)
             start_point = None
             for index in range(0, listbox.size()):
                 arr = listbox.get(first=index).replace(')', "")
@@ -589,7 +661,72 @@ def create_buttons_routes(self):
         frame2.grid(row=0, column=1)
         frame3.grid(row=1, columnspan=2)
 
-    font_titles = tk_font.Font(family=family1, size=12, weight="bold")
+    def block_path():
+        panel_block_window = tk.Toplevel(self)
+        panel_block_window.geometry("{}x{}+600+300".format(width_screen_route, height_screen_route))
+
+        panel_block_window.columnconfigure(0, minsize=width_panel / 2, weight=1)
+        panel_block_window.columnconfigure(1, minsize=width_panel / 2, weight=1)
+
+        block_title = tk.Label(panel_block_window, text="Block Path", font=font_titles, bg=color5)
+        block_title.grid(row=0, columnspan=2, sticky=tk.EW)
+
+        start_path_frame = tk.Frame(panel_block_window)
+
+        x0_input_text = tk.Label(start_path_frame, text='X')
+        x0_input_text.grid(row=0, column=0)
+        x0_input = tk.Entry(start_path_frame, width=5)
+        x0_input.grid(row=0, column=1)
+
+        y0_input_text = tk.Label(start_path_frame, text='Y')
+        y0_input_text.grid(row=1, column=0)
+        y0_input = tk.Entry(start_path_frame, width=5)
+        y0_input.grid(row=1, column=1)
+
+        start_path_frame.grid(row=1, column=0)
+
+        end_path_frame = tk.Frame(panel_block_window)
+
+        x1_input_text = tk.Label(end_path_frame, text='X')
+        x1_input_text.grid(row=0, column=0)
+        x1_input = tk.Entry(end_path_frame, width=5)
+        x1_input.grid(row=0, column=1)
+
+        y1_input_text = tk.Label(end_path_frame, text='Y')
+        y1_input_text.grid(row=1, column=0)
+        y1_input = tk.Entry(end_path_frame, width=5)
+        y1_input.grid(row=1, column=1)
+
+        end_path_frame.grid(row=1, column=1)
+
+        options_station_frame = tk.Frame(panel_block_window)
+        options_station_frame.columnconfigure(0, minsize=44, weight=1)
+        options_station_frame.columnconfigure(1, minsize=86, weight=1)
+        options_station_frame.columnconfigure(2, minsize=86, weight=1)
+        options_station_frame.columnconfigure(3, minsize=44, weight=1)
+
+        def block():
+            for path in self.generator.paths:
+                (x_start_path, y_start_path) = path.get_start_point()
+                (x_end_path, y_end_path) = path.get_end_point()
+                if (x_start_path == int(x0_input.get()) or x_end_path == int(x0_input.get())) and \
+                        (y_start_path == int(y0_input.get()) or y_end_path == int(y0_input.get())):
+                    if (x_start_path == int(x1_input.get()) or x_end_path == int(x1_input.get())) and \
+                            (y_start_path == int(y1_input.get()) or y_end_path == int(y1_input.get())):
+                        if path.is_block():
+                            path.unblock()
+                        else:
+                            path.block()
+                        break
+            panel_block_window.destroy()
+
+        cancel = tk.Button(options_station_frame, text="Cancel", width=9, command=lambda: panel_block_window.destroy())
+        cancel.grid(row=0, column=1, sticky=tk.EW)
+
+        complete_block_btn = tk.Button(options_station_frame, text="Block", command=partial(block), width=9)
+        complete_block_btn.grid(row=0, column=2, sticky=tk.EW)
+
+        options_station_frame.grid(row=2, columnspan=2, sticky=tk.EW)
 
     panel_routes = tk.Frame(self.panel)
     panel_routes.columnconfigure(0, minsize=86, weight=1)
@@ -618,7 +755,18 @@ def create_buttons_routes(self):
         msg_aux.grid(row=1, column=1, sticky=tk.EW)
         fin_i += 1
 
-    btn = tk.Button(panel_routes, text="Add Route", command=lambda: create_route())
+    options_route_frame = tk.Frame(panel_routes)
+    options_route_frame.columnconfigure(0, minsize=44, weight=1)
+    options_route_frame.columnconfigure(1, minsize=86, weight=1)
+    options_route_frame.columnconfigure(2, minsize=86, weight=1)
+    options_route_frame.columnconfigure(3, minsize=44, weight=1)
+
+    btn = tk.Button(options_route_frame, text="Add Route", command=lambda: create_route())
     btn.grid(row=fin_i, column=1, sticky='ew')
+
+    btn_block = tk.Button(options_route_frame, text="Block", command=lambda: block_path())
+    btn_block.grid(row=fin_i, column=2, sticky='ew')
+
+    options_route_frame.grid(row=fin_i, columnspan=3, sticky='ew')
 
     panel_routes.grid(row=3, sticky=tk.EW, pady=10)
