@@ -4,6 +4,16 @@ from datetime import datetime
 
 
 class User:
+    """Clase que representa al objeto usuario/pasajero.
+
+        Parámetros:
+        destination -- Estación de destino del pasajero
+        source -- Estación de inicio del pasajero
+        start_date_trip -- Fecha en la que el pasajero empezo el viaje
+        end_date_trip -- Fecha en la que el pasajero termino su viaje
+        code -- Identificador único del usuario
+
+        """
     __destination: Station
     __source: Station
     __route: Route

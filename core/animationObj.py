@@ -3,6 +3,7 @@ from entities.bus import *
 
 
 class AnimationObject:
+    """Clase encargada de llevar el estado de la animación del recorrido de un bus"""
 
     def __init__(self, x, y, actual_path: Path, paths_left, actual_bus: Bus, id_object):
         self.x = x

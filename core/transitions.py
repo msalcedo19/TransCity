@@ -28,6 +28,7 @@ def animate_route(app, animation_object: AnimationObject, fun=None):
         if fun is not None:
             fun(id_image)
         # print("{} {} {} {}".format(x,y,x_final,y_final))
+
         # Se verifica si ya esta en el punto de destino del camino, entra al if si aún no ha llegado
         if path.path_state(x, y) and not path.is_block():
             (x_final, y_final) = path.get_end_point()

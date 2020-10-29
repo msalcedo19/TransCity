@@ -40,7 +40,6 @@ class Application(tk.Frame):
         self.create_widgets()
         self.t = None
         paint_map(self)
-
     def refresh(self):
         self.canvas.delete('all')
         paint_map(self)

@@ -2,6 +2,15 @@ from entities.path import Path
 
 
 class Route:
+    """Clase que representa al objeto ruta.
+
+        Atributos:
+        paths -- Conjunto de caminos que debe tomar el bus para completar la ruta
+        block -- Indica si la ruta se encuentra bloqueada
+        code -- Identificador único de la ruta
+
+        """
+
     __paths: []
     __block: bool
     __code: int

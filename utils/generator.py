@@ -1,6 +1,6 @@
 from entities.bus import Bus
 from entities.route import Route
-from entities.path import Path, MapPath, PathType
+from entities.path import Path
 from entities.station import Station, StationType
 from entities.user import User
 from const import *
@@ -105,6 +105,7 @@ class Generator(ObserverLogic):
                                  'station': stn_code})
 
     def load_map(self):
+        """Carga todas las entidades del mundo, además del mapa."""
         if self.__loaded:
             self.map_paths = []
             self.stations = []
@@ -129,7 +130,6 @@ class Generator(ObserverLogic):
         self.parking_lot.append(stn2)
 
     def load_map_paths(self):
-        # Caminos Horizontales
         self.map_paths = [[(40, 40), (40, 404)], [(40, 404), (40, 677)], [(40, 677), (116, 677)],
                           [(40, 404), (116, 404)], [(40, 40), (268, 40)], [(116, 222), (268, 222)],
                           [(116, 222), (116, 404)], [(116, 404), (116, 677)], [(268, 40), (268, 131)],

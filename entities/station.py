@@ -7,6 +7,19 @@ class StationType(Enum):
 
 
 class Station:
+    """Clase que representa al objeto estación.
+
+        Atributos:
+        location -- Coordenadas donde se encuentra la estación
+        capacity -- Capacidad máxima de la estación
+        use -- Cantidad de buses/pasajeros en la estación
+        type -- Tipo de estación (Parqueadero de buses o estación de pasajeros)
+        isClose -- Indica si la estación se encuentra cerrada
+        users -- Pasajeros/Buses que se encuentran en la estación
+        code -- Identificador único de la estación
+
+        """
+
     __location: (int, int)
     __capacity: int
     __use: int

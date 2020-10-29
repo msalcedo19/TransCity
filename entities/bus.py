@@ -1,7 +1,5 @@
 from entities.route import Route
 from entities.station import Station
-import json
-from json import JSONEncoder
 
 
 class Bus:
@@ -13,6 +11,9 @@ class Bus:
         parking -- Parqueadero donde se encuentra el bus
         capacity -- Capacidad de pasajeros
         use -- Cantidad actual de pasajeros
+        color -- color del bus
+        code -- identificador único del bus
+        users -- usuarios que se encuentran actualmente dentro del bus
 
         """
     __speed: float = 0
@@ -23,8 +24,6 @@ class Bus:
     __color: str
     __code: int
     __users: []
-
-    __id_object: int
 
     def __init__(self, parking: Station, capacity: int, use: int, speed: float, color: str, code: int, route: Route):
         super().__init__()

@@ -20,49 +20,16 @@ class PathType(Enum):
     DIAGONAL = 2
 
 
-# Para le futuro pensarlo como rotación
-class MapPath:
-    __startPoint: (int, int)
-    __endPoint: (int, int)
-    __pathType: PathType
-    __id: int
-
-    def __init__(self, start: (int, int), end: (int, int), path_type: PathType):
-        self.__startPoint = start
-        self.__endPoint = end
-        self.__pathType = path_type
-        self.__id = None
-
-    def set_id(self, id: int):
-        self.__id = id
-
-    def set_start_point(self, x: int, y: int):
-        self.__startPoint = (x, y)
-
-    def set_end_point(self, x: int, y: int):
-        self.__endPoint = (x, y)
-
-    def get_start_point(self) -> (int, int):
-        return self.__startPoint
-
-    def get_end_point(self) -> (int, int):
-        return self.__endPoint
-
-    def set_path_type(self, path_type: PathType):
-        self.__pathType = path_type
-
-    def get_path_type(self) -> PathType:
-        return self.__pathType
-
-
 class Path:
-    """Clase que representa al objeto camino.
+    """Clase que representa al objeto camino el cual pertenece a una ruta de un bus.
 
         Atributos:
         startPoint -- Punto donde inicia el tramo del camino (x,y)
         endPoint -- Punto donde finaliza el tramo del camino (x,y)
         typeMov -- Tipo de movimiento que se realiza durante el tramo
         station -- Indica la estación asociada a ese tramo
+        block -- Indica si la estación se encuentra bloqueada
+        code -- Identificador único del camino
 
         """
     __typeMove: MoveTypeV2
@@ -93,6 +60,8 @@ class Path:
         return self.__block
 
     def define_move_type(self):
+        """Define el tipo de movimiento que hara el bus por este tramo."""
+
         if self.__endPoint is None:
             self.__typeMove = MoveTypeV2.DETENIDO
         else:
@@ -127,6 +96,13 @@ class Path:
 
     # Retorna False si ya llego al punto de destino, True de lo contrario.
     def path_state(self, x: int, y: int):
+        """Determina si las coordenadas actuales del bus coinciden con las coordenadas finales del tramo.
+
+            Parámetros:
+            x -- Coordenada en x
+            y -- Coordenada en y
+
+            """
         if self.__endPoint is not None:
             (x_final, y_final) = self.__endPoint
             x_aux = (x - x_final)/2
