@@ -1,0 +1,799 @@
+{
+  "buses": {
+    "1": {
+      "capacity": 50,
+      "use": 0,
+      "speed": 120,
+      "route": 1,
+      "parking": 9,
+      "users": []
+    },
+    "2": {
+      "capacity": 50,
+      "use": 0,
+      "speed": 140,
+      "route": 2,
+      "parking": 9,
+      "users": []
+    }
+  },
+  "stations": {
+    "1": {
+      "location": [
+        40,
+        404
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "2": {
+      "location": [
+        496,
+        404
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "3": {
+      "location": [
+        496,
+        586
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "4": {
+      "location": [
+        268,
+        131
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "5": {
+      "location": [
+        648,
+        222
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "6": {
+      "location": [
+        724,
+        40
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "7": {
+      "location": [
+        800,
+        586
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "8": {
+      "location": [
+        876,
+        677
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "9": {
+      "location": [
+        40,
+        40
+      ],
+      "capacity": 10,
+      "use": 0,
+      "isClose": false,
+      "type": "P",
+      "color": "black",
+      "users": []
+    },
+    "10": {
+      "location": [
+        952,
+        404
+      ],
+      "capacity": 5,
+      "use": 0,
+      "isClose": false,
+      "type": "P",
+      "color": "black",
+      "users": []
+    }
+  },
+  "users": {},
+  "routes": {
+    "1": {
+      "isBlock": false,
+      "paths": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ]
+    },
+    "2": {
+      "isBlock": false,
+      "paths": [
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ]
+    }
+  },
+  "paths": {
+    "1": {
+      "start": [
+        40,
+        40
+      ],
+      "end": [
+        40,
+        404
+      ],
+      "isBlock": false,
+      "station": 1,
+      "typeMove": "VERTICAL_ABAJO"
+    },
+    "2": {
+      "start": [
+        40,
+        404
+      ],
+      "end": [
+        40,
+        677
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "VERTICAL_ABAJO"
+    },
+    "3": {
+      "start": [
+        40,
+        677
+      ],
+      "end": [
+        116,
+        677
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "HORIZONTAL_DERECHA"
+    },
+    "4": {
+      "start": [
+        116,
+        677
+      ],
+      "end": [
+        420,
+        586
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "DIAG_DER_ARR"
+    },
+    "5": {
+      "start": [
+        420,
+        586
+      ],
+      "end": [
+        572,
+        586
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "HORIZONTAL_DERECHA"
+    },
+    "6": {
+      "start": [
+        572,
+        586
+      ],
+      "end": [
+        800,
+        677
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "DIAG_DER_ABJ"
+    },
+    "7": {
+      "start": [
+        800,
+        677
+      ],
+      "end": [
+        800,
+        404
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "VERTICAL_ARRIBA"
+    },
+    "8": {
+      "start": [
+        800,
+        404
+      ],
+      "end": [
+        496,
+        404
+      ],
+      "isBlock": false,
+      "station": 2,
+      "typeMove": "HORIZONTAL_IZQUIERDA"
+    },
+    "9": {
+      "start": [
+        496,
+        404
+      ],
+      "end": [
+        496,
+        222
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "VERTICAL_ARRIBA"
+    },
+    "10": {
+      "start": [
+        496,
+        222
+      ],
+      "end": [
+        800,
+        222
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "HORIZONTAL_DERECHA"
+    },
+    "11": {
+      "start": [
+        800,
+        222
+      ],
+      "end": [
+        800,
+        131
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "VERTICAL_ARRIBA"
+    },
+    "12": {
+      "start": [
+        800,
+        131
+      ],
+      "end": [
+        952,
+        131
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "HORIZONTAL_DERECHA"
+    },
+    "13": {
+      "start": [
+        952,
+        131
+      ],
+      "end": [
+        952,
+        404
+      ],
+      "isBlock": false,
+      "station": 9,
+      "typeMove": "VERTICAL_ABAJO"
+    },
+    "14": {
+      "start": [
+        952,
+        40
+      ],
+      "end": [
+        496,
+        40
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "HORIZONTAL_IZQUIERDA"
+    },
+    "15": {
+      "start": [
+        496,
+        40
+      ],
+      "end": [
+        496,
+        404
+      ],
+      "isBlock": false,
+      "station": 2,
+      "typeMove": "VERTICAL_ABAJO"
+    },
+    "16": {
+      "start": [
+        496,
+        404
+      ],
+      "end": [
+        800,
+        404
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "HORIZONTAL_DERECHA"
+    },
+    "17": {
+      "start": [
+        800,
+        404
+      ],
+      "end": [
+        800,
+        677
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "VERTICAL_ABAJO"
+    },
+    "18": {
+      "start": [
+        800,
+        677
+      ],
+      "end": [
+        876,
+        677
+      ],
+      "isBlock": false,
+      "station": 8,
+      "typeMove": "HORIZONTAL_DERECHA"
+    },
+    "19": {
+      "start": [
+        876,
+        677
+      ],
+      "end": [
+        952,
+        677
+      ],
+      "isBlock": false,
+      "station": null,
+      "typeMove": "HORIZONTAL_DERECHA"
+    },
+    "20": {
+      "start": [
+        952,
+        677
+      ],
+      "end": [
+        952,
+        404
+      ],
+      "isBlock": false,
+      "station": 9,
+      "typeMove": "VERTICAL_ARRIBA"
+    }
+  },
+  "map_paths": [
+    [
+      [
+        40,
+        40
+      ],
+      [
+        40,
+        404
+      ]
+    ],
+    [
+      [
+        40,
+        404
+      ],
+      [
+        40,
+        677
+      ]
+    ],
+    [
+      [
+        40,
+        677
+      ],
+      [
+        116,
+        677
+      ]
+    ],
+    [
+      [
+        40,
+        404
+      ],
+      [
+        116,
+        404
+      ]
+    ],
+    [
+      [
+        40,
+        40
+      ],
+      [
+        268,
+        40
+      ]
+    ],
+    [
+      [
+        116,
+        222
+      ],
+      [
+        268,
+        222
+      ]
+    ],
+    [
+      [
+        116,
+        222
+      ],
+      [
+        116,
+        404
+      ]
+    ],
+    [
+      [
+        116,
+        404
+      ],
+      [
+        116,
+        677
+      ]
+    ],
+    [
+      [
+        268,
+        40
+      ],
+      [
+        268,
+        131
+      ]
+    ],
+    [
+      [
+        268,
+        40
+      ],
+      [
+        496,
+        40
+      ]
+    ],
+    [
+      [
+        268,
+        222
+      ],
+      [
+        496,
+        222
+      ]
+    ],
+    [
+      [
+        116,
+        404
+      ],
+      [
+        496,
+        404
+      ]
+    ],
+    [
+      [
+        116,
+        677
+      ],
+      [
+        420,
+        586
+      ]
+    ],
+    [
+      [
+        420,
+        586
+      ],
+      [
+        496,
+        586
+      ]
+    ],
+    [
+      [
+        496,
+        222
+      ],
+      [
+        496,
+        404
+      ]
+    ],
+    [
+      [
+        496,
+        40
+      ],
+      [
+        724,
+        40
+      ]
+    ],
+    [
+      [
+        724,
+        40
+      ],
+      [
+        952,
+        40
+      ]
+    ],
+    [
+      [
+        496,
+        222
+      ],
+      [
+        648,
+        222
+      ]
+    ],
+    [
+      [
+        648,
+        222
+      ],
+      [
+        800,
+        222
+      ]
+    ],
+    [
+      [
+        496,
+        404
+      ],
+      [
+        800,
+        404
+      ]
+    ],
+    [
+      [
+        572,
+        586
+      ],
+      [
+        800,
+        677
+      ]
+    ],
+    [
+      [
+        800,
+        131
+      ],
+      [
+        952,
+        131
+      ]
+    ],
+    [
+      [
+        800,
+        404
+      ],
+      [
+        952,
+        404
+      ]
+    ],
+    [
+      [
+        800,
+        677
+      ],
+      [
+        876,
+        677
+      ]
+    ],
+    [
+      [
+        876,
+        677
+      ],
+      [
+        952,
+        677
+      ]
+    ],
+    [
+      [
+        800,
+        222
+      ],
+      [
+        800,
+        131
+      ]
+    ],
+    [
+      [
+        800,
+        222
+      ],
+      [
+        800,
+        404
+      ]
+    ],
+    [
+      [
+        800,
+        404
+      ],
+      [
+        800,
+        586
+      ]
+    ],
+    [
+      [
+        800,
+        586
+      ],
+      [
+        800,
+        677
+      ]
+    ],
+    [
+      [
+        952,
+        40
+      ],
+      [
+        952,
+        131
+      ]
+    ],
+    [
+      [
+        952,
+        131
+      ],
+      [
+        952,
+        404
+      ]
+    ],
+    [
+      [
+        952,
+        404
+      ],
+      [
+        952,
+        677
+      ]
+    ],
+    [
+      [
+        496,
+        40
+      ],
+      [
+        496,
+        222
+      ]
+    ],
+    [
+      [
+        268,
+        131
+      ],
+      [
+        268,
+        222
+      ]
+    ],
+    [
+      [
+        496,
+        586
+      ],
+      [
+        572,
+        586
+      ]
+    ],
+    [
+      [
+        496,
+        404
+      ],
+      [
+        496,
+        586
+      ]
+    ]
+  ]
+}

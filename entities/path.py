@@ -3,15 +3,15 @@ from entities.station import Station
 
 
 class MoveTypeV2(Enum):
-    VERTICAL_ARRIBA = 0
-    VERTICAL_ABAJO = 1
-    HORIZONTAL_DERECHA = 2
-    HORIZONTAL_IZQUIERDA = 3
-    DETENIDO = 4
-    DIAG_DER_ARR = 5
-    DIAG_DER_ABJ = 6
-    DIAG_IZQ_ARR = 7
-    DIAG_IZQ_ABJ = 8
+    VERTICAL_ARRIBA = 'VERTICAL_ARRIBA'
+    VERTICAL_ABAJO = 'VERTICAL_ABAJO'
+    HORIZONTAL_DERECHA = 'HORIZONTAL_DERECHA'
+    HORIZONTAL_IZQUIERDA = 'HORIZONTAL_IZQUIERDA'
+    DETENIDO = 'DETENIDO'
+    DIAG_DER_ARR = 'DIAG_DER_ARR'
+    DIAG_DER_ABJ = 'DIAG_DER_ABJ'
+    DIAG_IZQ_ARR = 'DIAG_IZQ_ARR'
+    DIAG_IZQ_ABJ = 'DIAG_IZQ_ABJ'
 
 
 class PathType(Enum):
@@ -46,6 +46,13 @@ class Path:
         self.define_move_type()
         self.__block = False
         self.__code = code
+
+    def encode(self):
+        station = None
+        if self.__station:
+            station = self.__station.get_code()
+        return dict(start=self.__startPoint, end=self.__endPoint, isBlock=self.__block, station=station,
+                    typeMove=self.__typeMove.value)
 
     def get_code(self):
         return self.__code

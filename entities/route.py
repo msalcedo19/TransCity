@@ -21,7 +21,10 @@ class Route:
         self.__code = code
 
     def encode(self):
-        return dict(code=self.__code, isBlock=self.__block)
+        paths = []
+        for path in self.__paths:
+            paths.append(path.get_code())
+        return dict(isBlock=self.__block, paths=paths)
 
     def get_code(self):
         return self.__code

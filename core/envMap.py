@@ -33,9 +33,3 @@ def paint_map(self):
         (x0, y0) = stn.get_location()
         create_station(x0, y0, stn, stn.color)
 
-    stations = self.generator.parking_lot
-    for stn in stations:
-        (x0, y0) = stn.get_location()
-        create_station(x0, y0, stn, "black")
-
-

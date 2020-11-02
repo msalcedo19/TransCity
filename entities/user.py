@@ -28,6 +28,13 @@ class User:
         self.__code = code
         self.__end_date_trip = None
 
+    def encode(self):
+        end_date = 'NA'
+        if self.__end_date_trip:
+            end_date = self.__end_date_trip
+        return dict(source=self.__source.get_code(), destination=self.__destination.get_code(),
+                    start_date=str(self.__start_date_trip), end_date=str(end_date), route=self.__route.get_code())
+
     def get_code(self):
         return self.__code
 

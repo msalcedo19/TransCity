@@ -1,0 +1,134 @@
+{
+  "buses": {
+    "1": {
+      "capacity": 50,
+      "use": 0,
+      "speed": 120,
+      "route": 1,
+      "parking": 7,
+      "users": []
+    }
+  },
+  "stations": {
+    "1": {
+      "location": [
+        40,
+        222
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "2": {
+      "location": [
+        268,
+        40
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "3": {
+      "location": [
+        496,
+        222
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "4": {
+      "location": [
+        496,
+        495
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "5": {
+      "location": [
+        800,
+        495
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "6": {
+      "location": [
+        952,
+        222
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "S",
+      "color": "#4571EC",
+      "users": []
+    },
+    "7": {
+      "location": [
+        40,
+        677
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "P",
+      "color": "black",
+      "users": []
+    },
+    "8": {
+      "location": [
+        952,
+        40
+      ],
+      "capacity": 100,
+      "use": 0,
+      "isClose": false,
+      "type": "P",
+      "color": "black",
+      "users": []
+    }
+  },
+  "users": {},
+  "routes": {
+    "1": {
+      "isBlock": false,
+      "paths": [
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  },
+  "paths": {
+    "1": {"start": [40, 677], "end": [40, 222], "isBlock": false, "station": 1, "typeMove": "VERTICAL_ARRIBA"},
+    "2": {"start": [40, 222], "end": [496, 222], "isBlock": false, "station": 3, "typeMove": "HORIZONTAL_DERECHA"},
+    "3": {"start": [496, 222], "end": [952, 222], "isBlock": false, "station": 6, "typeMove": "HORIZONTAL_DERECHA"},
+    "4": {"start": [952, 222], "end": [952, 40], "isBlock": false, "station": 7, "typeMove": "VERTICAL_ARRIBA"}
+  },
+  "map_paths": [[[40, 222], [268, 40]], [[268, 40], [952, 40]], [[40, 222], [268, 222]], [[268, 222], [496, 222]],
+    [[496, 222], [800, 222]], [[800, 222], [952, 40]], [[800, 222], [952, 222]], [[40, 495], [268, 495]],
+    [[268, 495], [496, 495]], [[496, 495], [800, 222]], [[800, 495], [952, 495]], [[268, 677], [496, 677]],
+    [[496, 677], [800, 677]], [[40, 222], [40, 495]], [[40, 495], [40, 677]], [[268, 40], [268, 222]],
+    [[268, 222], [268, 495]], [[268, 495], [268, 677]], [[496, 222], [496, 495]], [[496, 495], [496, 677]],
+    [[800, 222], [800, 495]], [[800, 495], [800, 677]], [[952, 40], [952, 222]], [[952, 222], [952, 495]]]
+}

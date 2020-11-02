@@ -110,7 +110,11 @@ class Application(tk.Frame):
         self.data_resume = {'stations': [], 'resume': []}
 
     def log(self):
-        self.generator.log()
+        self.generator.load()
+        create_buttons_buses(self)
+        create_buttons_stations(self)
+        create_buttons_routes(self)
+        paint_map(self)
 
     def save(self):
         self.generator.save()

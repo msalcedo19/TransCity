@@ -2,8 +2,8 @@ from enum import Enum
 
 
 class StationType(Enum):
-    PARKING = 0
-    STATION = 1
+    PARKING = 'P'
+    STATION = 'S'
 
 
 class Station:
@@ -28,7 +28,7 @@ class Station:
     __code: int
     __users: []
 
-    def __init__(self, location: (int, int), use: int, capacity: int, code: int, stn_type: StationType = 1):
+    def __init__(self, location: (int, int), use: int, capacity: int, code: int, stn_type: StationType = 'S'):
         self.__location = location
         self.__use = use
         self.__capacity = capacity
@@ -42,7 +42,11 @@ class Station:
         self.id_object = None
 
     def encode(self):
-        return dict(location=self.__location, capacity=self.__capacity)
+        users = []
+        for user in self.__users:
+            users.append(user.get_code())
+        return dict(location=self.__location, capacity=self.__capacity, use=self.__use, isClose=self.__isClose,
+                    type=self.__type.value, color=self.color, users=users)
 
     def new_user(self, user):
         self.__users.append(user)

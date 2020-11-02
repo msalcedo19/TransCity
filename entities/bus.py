@@ -33,12 +33,16 @@ class Bus:
         self.__capacity = capacity
         self.__use = use
         self.__color = color
-        self.__id_object = None
         self.__code = code
         self.__users = []
+        self.__id_object = None
 
     def encode(self):
-        return dict(code=self.__code, speed=self.__speed, route=self.__route.encode(), parking=self.__parking.encode())
+        users = []
+        for user in self.__users:
+            users.append(user.get_code())
+        return dict(capacity=self.__capacity, use=self.__use, speed=self.__speed, route=self.__route.get_code(),
+                    parking=self.__parking.get_code(), users=users)
 
     def add_user(self, user):
         self.__users.append(user)

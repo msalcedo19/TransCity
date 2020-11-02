@@ -16,7 +16,6 @@ class Generator(ObserverLogic):
     routes: []
     map_paths: []
     stations: []
-    parking_lot: []
     users: []
     paths: []
     __loaded: bool
@@ -26,7 +25,6 @@ class Generator(ObserverLogic):
         self.routes = []
         self.map_paths = []
         self.stations = []
-        self.parking_lot = []
         self.users = []
         self.paths = []
         self.__loaded = False
@@ -36,12 +34,105 @@ class Generator(ObserverLogic):
         self.end_y_map = height_canvas - padding_bottom_canvas
 
     def save(self):
-        data = {}
-        data['buses'] = []
+        data = dict()
+        data['buses'] = {}
+        data['stations'] = {}
+        data['users'] = {}
+        data['routes'] = {}
+        data['paths'] = {}
+        data['map_paths'] = []
         for bus in self.buses:
-            data['buses'].append(bus.encode())
+            data['buses'][bus.get_code()] = bus.encode()
+        for station in self.stations:
+            data['stations'][station.get_code()] = station.encode()
+        for user in self.users:
+            data['users'][user.get_code()] = user.encode()
+        for route in self.routes:
+            data['routes'][route.get_code()] = route.encode()
+        for path in self.paths:
+            data['paths'][path.get_code()] = path.encode()
+        for map_path in self.map_paths:
+            data['map_paths'].append(map_path)
         with open('data.json', 'w') as outfile:
-            json.dump(data, outfile)
+            json.dump(data, outfile, indent=2)
+
+    def load(self):
+
+        def exist_stn(code_station: str):
+            resp = None
+            for p_station in self.stations:
+                if p_station.get_code() == int(code_station):
+                    resp = p_station
+                    break
+            return resp
+
+        with open('./data/save/data1.json') as infile:
+            data = json.load(infile)
+            for code in data['buses']:
+                bus = data['buses'][code]
+
+                route = data['routes'][str(bus['route'])]
+                new_route: Route = Route(code=bus['route'])
+                for code_path in route['paths']:
+                    path = data['paths'][str(code_path)]
+
+                    code_stn = path['station']
+                    new_stn = None
+                    if code_stn:
+                        station = exist_stn(str(code_stn))
+                        if not station:
+                            station = data['stations'][str(code_stn)]
+                            stn_type = StationType.STATION
+                            if station['type'] == StationType.PARKING.value:
+                                stn_type = StationType.PARKING
+                            new_stn = Station(code=path['station'], location=station['location'],
+                                              use=station['use'], capacity=station['capacity'],
+                                              stn_type=stn_type)
+                            if station['type'] == StationType.PARKING.value:
+                                new_stn.color = station['color']
+                            self.stations.append(new_stn)
+                        else:
+                            new_stn = station
+
+                    new_path: Path = Path(code=code_path, start=path['start'], end=path['end'], station=new_stn)
+                    new_route.add_path(new_path)
+                    self.paths.append(new_path)
+                self.routes.append(new_route)
+
+                parking = exist_stn(str(bus['parking']))
+                if not parking:
+                    parking = data['stations'][str(bus['parking'])]
+                    stn_type = StationType.STATION
+                    if parking['type'] == StationType.PARKING.value:
+                        stn_type = StationType.PARKING
+                    new_stn: Station = Station(code=bus['parking'], location=parking['location'],
+                                               use=parking['use'], capacity=parking['capacity'],
+                                               stn_type=stn_type)
+                    new_stn.color = parking['color']
+                    self.stations.append(new_stn)
+                self.buses.append(Bus(code=code, capacity=bus['capacity'], use=bus['use'], speed=bus['speed'],
+                                      route=new_route, color=color1, parking=parking))
+
+            for map_path in data['map_paths']:
+                (start, end) = map_path
+                start = tuple(start)
+                end = tuple(end)
+                self.map_paths.append([start, end])
+
+            for code_stn in data['stations']:
+                station = exist_stn(code_stn)
+                if not station:
+                    station = data['stations'][code_stn]
+                    stn_type = StationType.STATION
+                    if station['type'] == StationType.PARKING.value:
+                        stn_type = StationType.PARKING
+                    new_stn = Station(code=code_stn, location=station['location'], use=station['use'],
+                                      capacity=station['capacity'], stn_type=stn_type)
+                    if station['type'] == StationType.PARKING.value:
+                        new_stn.color = station['color']
+                    self.stations.append(new_stn)
+            """for user in self.users:
+                data['users'].append(user.encode())"""
 
     def log(self):
         with open('./data/stations.csv', mode='a') as csv_file:
@@ -111,23 +202,25 @@ class Generator(ObserverLogic):
             self.stations = []
             self.routes = []
             self.buses = []
-            self.parking_lot = []
             self.users = []
             self.paths = []
-        self.load_map_paths()
+        """self.load_map_paths()
         self.load_stations()
         self.load_parking_lot()
         self.load_map_paths()
         self.load_routes()
-        self.load_buses()
+        self.load_buses()"""
         self.__loaded = True
 
     def load_parking_lot(self):
-        stn1 = Station(capacity=10, location=(40, 40), use=0, stn_type=StationType.PARKING, code=1)
-        stn2 = Station(capacity=5, location=(952, 404), use=0, stn_type=StationType.PARKING, code=2)
+        stn1 = Station(capacity=10, location=(40, 40), use=0, stn_type=StationType.PARKING, code=9)
+        stn2 = Station(capacity=5, location=(952, 404), use=0, stn_type=StationType.PARKING, code=10)
 
-        self.parking_lot.append(stn1)
-        self.parking_lot.append(stn2)
+        stn1.color = 'black'
+        stn2.color = 'black'
+
+        self.stations.append(stn1)
+        self.stations.append(stn2)
 
     def load_map_paths(self):
         self.map_paths = [[(40, 40), (40, 404)], [(40, 404), (40, 677)], [(40, 677), (116, 677)],
@@ -156,7 +249,7 @@ class Generator(ObserverLogic):
         path8_route1 = Path(start=(496, 222), end=(800, 222), code=10)
         path9_route1 = Path(start=(800, 222), end=(800, 131), code=11)
         path10_route1 = Path(start=(800, 131), end=(952, 131), code=12)
-        path11_route1 = Path(start=(952, 131), end=(952, 404), station=self.parking_lot[1], code=13)
+        path11_route1 = Path(start=(952, 131), end=(952, 404), station=self.stations[8], code=13)
 
         route1 = Route(code=1)
         route1.add_path(path0_route1)
@@ -179,7 +272,7 @@ class Generator(ObserverLogic):
         path3_route2 = Path(start=(800, 404), end=(800, 677), code=17)
         path4_route2 = Path(start=(800, 677), end=(876, 677), station=self.stations[7], code=18)
         path5_route2 = Path(start=(876, 677), end=(952, 677), code=19)
-        path6_route2 = Path(start=(952, 677), end=(952, 404), station=self.parking_lot[1], code=20)
+        path6_route2 = Path(start=(952, 677), end=(952, 404), station=self.stations[8], code=20)
 
         route2 = Route(code=2)
         route2.add_path(path0_route2)
@@ -195,7 +288,9 @@ class Generator(ObserverLogic):
 
         self.paths.append(path0_route1)
         self.paths.append(path1_route1)
+        self.paths.append(path1_1_route1)
         self.paths.append(path2_route1)
+        self.paths.append(path3_route1)
         self.paths.append(path4_route1)
         self.paths.append(path5_route1)
         self.paths.append(path6_route1)
@@ -214,11 +309,11 @@ class Generator(ObserverLogic):
 
     def load_buses(self):
 
-        bus1 = Bus(parking=self.parking_lot[0], capacity=50, use=0, speed=120, color='#C72402', code=1,
+        bus1 = Bus(parking=self.stations[8], capacity=50, use=0, speed=120, color='#C72402', code=1,
                    route=self.routes[0])
         self.buses.append(bus1)
 
-        bus2 = Bus(parking=self.parking_lot[0], capacity=50, use=0, speed=140, color='green', code=2,
+        bus2 = Bus(parking=self.stations[8], capacity=50, use=0, speed=140, color='green', code=2,
                    route=self.routes[1])
         self.buses.append(bus2)
 
