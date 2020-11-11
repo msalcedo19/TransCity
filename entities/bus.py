@@ -23,9 +23,12 @@ class Bus:
     __use: int
     __color: str
     __code: int
+    __block: bool
+    __active: bool
     __users: []
 
-    def __init__(self, parking: Station, capacity: int, use: int, speed: float, color: str, code: int, route: Route):
+    def __init__(self, parking: Station, capacity: int, use: int, speed: float, color: str, code: int, route: Route,
+                 block: bool = False):
         super().__init__()
         self.__speed = speed
         self.__route = route
@@ -35,14 +38,20 @@ class Bus:
         self.__color = color
         self.__code = code
         self.__users = []
+        self.__block = block
+        self.__active = False
         self.__id_object = None
+        self.btn_id = None
+
+    def __eq__(self, other_bus):
+        return self.__code == other_bus.get_code()
 
     def encode(self):
         users = []
         for user in self.__users:
             users.append(user.get_code())
         return dict(capacity=self.__capacity, use=self.__use, speed=self.__speed, route=self.__route.get_code(),
-                    parking=self.__parking.get_code(), users=users)
+                    parking=self.__parking.get_code(), users=users, block=self.__block)
 
     def add_user(self, user):
         self.__users.append(user)
@@ -51,6 +60,15 @@ class Bus:
     def del_user(self, user):
         self.__users.remove(user)
         self.decrease_user()
+
+    def block(self):
+        self.__block = True
+
+    def unblock(self):
+        self.__block = False
+
+    def is_block(self):
+        return self.__block
 
     def users(self):
         return self.__users
@@ -102,4 +120,13 @@ class Bus:
 
     def get_color(self):
         return self.__color
+
+    def activate(self):
+        self.__active = True
+
+    def deactivate(self):
+        self.__active = False
+
+    def is_active(self):
+        return self.__active
 

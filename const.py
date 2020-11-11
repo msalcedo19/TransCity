@@ -13,8 +13,8 @@ width_screen = 1270
 height_screen = 720
 
 # Ventanas auxiliares
-width_screen_route = 300
-height_screen_route = 180
+width_screen_aux = 300
+height_screen_aux = 180
 
 # Panel de Control
 width_panel = 270

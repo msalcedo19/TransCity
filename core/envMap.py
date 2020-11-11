@@ -24,6 +24,7 @@ def paint_map(self):
         pid = self.canvas.create_oval(x - station_width, y - station_width,
                                       x + station_width, y + station_width, fill=color)
         id_text = self.canvas.create_text(x, y, text=station.get_use(), fill='white')
+        self.canvas.create_text(x, y + up, text='Code: {}'.format(station.get_code()), fill='black')
 
         station.id_text_object = id_text
         station.id_object = pid
@@ -32,4 +33,6 @@ def paint_map(self):
     for stn in stations:
         (x0, y0) = stn.get_location()
         create_station(x0, y0, stn, stn.color)
+        if (x0, y0 - up) not in self.coords:
+            self.coords.append((x0, y0 - up))
 

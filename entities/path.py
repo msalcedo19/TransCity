@@ -136,3 +136,6 @@ class Path:
 
     def get_station(self):
         return self.__station
+
+    def set_station(self, stn: Station):
+        self.__station = stn

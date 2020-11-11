@@ -40,6 +40,10 @@ class Station:
 
         self.id_text_object = None
         self.id_object = None
+        self.btn_id = None
+
+    def __eq__(self, other_stn):
+        return self.__code == other_stn.get_code()
 
     def encode(self):
         users = []

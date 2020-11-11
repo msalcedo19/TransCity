@@ -1,20 +1,40 @@
 {
   "buses": {
     "1": {
-      "capacity": 50,
+      "capacity": 20,
       "use": 0,
       "speed": 120,
       "route": 1,
       "parking": 9,
-      "users": []
+      "users": [],
+      "block": false
+    },
+    "3": {
+      "capacity": 25,
+      "use": 0,
+      "speed": 120,
+      "route": 2,
+      "parking": 9,
+      "users": [],
+      "block": false
     },
     "2": {
-      "capacity": 50,
+      "capacity": 10,
       "use": 0,
       "speed": 140,
       "route": 2,
-      "parking": 9,
-      "users": []
+      "parking": 10,
+      "users": [],
+      "block": false
+    },
+    "4": {
+      "capacity": 50,
+      "use": 0,
+      "speed": 90,
+      "route": 2,
+      "parking": 10,
+      "users": [],
+      "block": false
     }
   },
   "stations": {
@@ -35,7 +55,7 @@
         496,
         404
       ],
-      "capacity": 100,
+      "capacity": 30,
       "use": 0,
       "isClose": false,
       "type": "S",

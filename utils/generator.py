@@ -3,12 +3,14 @@ from entities.route import Route
 from entities.path import Path
 from entities.station import Station, StationType
 from entities.user import User
+from core.envButtons import Action
 from const import *
 import random
 import time
 from utils.observer import ObserverLogic
 import csv
 import json
+import easygui as eg
 
 
 class Generator(ObserverLogic):
@@ -28,19 +30,143 @@ class Generator(ObserverLogic):
         self.users = []
         self.paths = []
         self.__loaded = False
-        self.start_x_map = padding_left_canvas
-        self.end_x_map = width_canvas - padding_right_canvas
-        self.start_y_map = padding_top_canvas
-        self.end_y_map = height_canvas - padding_bottom_canvas
 
     def save(self):
+
+        file = eg.filesavebox(msg="Guardar archivo",
+                              title="TransCity",
+                              default='./data/save/',
+                              filetypes=["*.json"])
+        if file:
+            data = dict()
+            data['buses'] = {}
+            data['stations'] = {}
+            data['users'] = {}
+            data['routes'] = {}
+            data['paths'] = {}
+            data['map_paths'] = []
+            for bus in self.buses:
+                data['buses'][bus.get_code()] = bus.encode()
+            for station in self.stations:
+                data['stations'][station.get_code()] = station.encode()
+            for user in self.users:
+                data['users'][user.get_code()] = user.encode()
+            for route in self.routes:
+                data['routes'][route.get_code()] = route.encode()
+            for path in self.paths:
+                data['paths'][path.get_code()] = path.encode()
+            for map_path in self.map_paths:
+                data['map_paths'].append(map_path)
+            with open(file, 'w') as outfile:
+                json.dump(data, outfile, indent=2)
+
+    def load(self):
+        file = eg.fileopenbox(msg="Cargar archivo",
+                              title="TransCity",
+                              default='./data/save/',
+                              filetypes=["*.json"])
+
+        def exist_stn(code_station: str) -> Station:
+            resp = None
+            for p_station in self.stations:
+                if p_station.get_code() == int(code_station):
+                    resp = p_station
+                    break
+            return resp
+
+        def exist_route(code_route: str) -> Route:
+            resp = None
+            for p_route in self.routes:
+                if p_route.get_code() == int(code_route):
+                    resp = p_route
+                    break
+            return resp
+
+        if file:
+            with open(file) as infile:
+                data = json.load(infile)
+                # Empieza cargando los buses
+                for code in data['buses']:
+                    bus = data['buses'][code]
+
+                    # Luego carga la ruta del bus correspondiente
+                    new_route = exist_route(bus['route'])
+                    if not new_route:
+                        route = data['routes'][str(bus['route'])]
+                        new_route: Route = Route(code=bus['route'])
+                        # Carga los tramos de la ruta
+                        for code_path in route['paths']:
+                            path = data['paths'][str(code_path)]
+
+                            code_stn = path['station']
+                            new_stn = None
+                            # Se verifica si tiene el código de una estación valido
+                            if code_stn:
+                                station = exist_stn(str(code_stn))
+                                # Verifica si se ha cargado anteriormente dicha estación.
+                                # Si no existe, se crea una nueva.
+                                if not station:
+                                    station = data['stations'][str(code_stn)]
+                                    stn_type = StationType.STATION
+                                    if station['type'] == StationType.PARKING.value:
+                                        stn_type = StationType.PARKING
+                                    new_stn = Station(code=int(path['station']), location=station['location'],
+                                                      use=station['use'], capacity=station['capacity'],
+                                                      stn_type=stn_type)
+                                    new_stn.color = station['color']
+                                    self.stations.append(new_stn)
+                                else:
+                                    new_stn = station
+
+                            new_path: Path = Path(code=code_path, start=path['start'], end=path['end'], station=new_stn)
+                            new_route.add_path(new_path)
+                            self.paths.append(new_path)
+                        self.routes.append(new_route)
+
+                    # Se carga la estación de buses correspondiente del bus
+                    parking = exist_stn(str(bus['parking']))
+                    # Se verifica si ya se ha cargado dicha estación de buses, Si no existe, se crea una estación nueva.
+                    if not parking:
+                        parking = data['stations'][str(bus['parking'])]
+                        stn_type = StationType.STATION
+                        if parking['type'] == StationType.PARKING.value:
+                            stn_type = StationType.PARKING
+                        new_stn: Station = Station(code=int(bus['parking']), location=parking['location'],
+                                                   use=parking['use'], capacity=parking['capacity'],
+                                                   stn_type=stn_type)
+                        new_stn.color = parking['color']
+                        self.stations.append(new_stn)
+                        parking = new_stn
+                    self.buses.append(Bus(code=int(code), capacity=bus['capacity'], use=bus['use'], speed=bus['speed'],
+                                          route=new_route, color=color1, parking=parking, block=bus['block']))
+
+                for map_path in data['map_paths']:
+                    (start, end) = map_path
+                    start = tuple(start)
+                    end = tuple(end)
+                    self.map_paths.append([start, end])
+
+                # Se cargan las estaciones faltantes, verificando que no se hayan cargado anteriormente.
+                for code_stn in data['stations']:
+                    station = exist_stn(code_stn)
+                    if not station:
+                        station = data['stations'][code_stn]
+                        stn_type = StationType.STATION
+                        if station['type'] == StationType.PARKING.value:
+                            stn_type = StationType.PARKING
+                        new_stn = Station(code=int(code_stn), location=station['location'], use=station['use'],
+                                          capacity=station['capacity'], stn_type=stn_type)
+                        new_stn.color = station['color']
+
+                        self.stations.append(new_stn)
+
+    def log(self, action: Action):
         data = dict()
-        data['buses'] = {}
+        """data['buses'] = {}
         data['stations'] = {}
         data['users'] = {}
         data['routes'] = {}
         data['paths'] = {}
-        data['map_paths'] = []
         for bus in self.buses:
             data['buses'][bus.get_code()] = bus.encode()
         for station in self.stations:
@@ -51,168 +177,47 @@ class Generator(ObserverLogic):
             data['routes'][route.get_code()] = route.encode()
         for path in self.paths:
             data['paths'][path.get_code()] = path.encode()
-        for map_path in self.map_paths:
-            data['map_paths'].append(map_path)
-        with open('data.json', 'w') as outfile:
-            json.dump(data, outfile, indent=2)
+        with open('./data/log_v1.txt', 'a') as outfile:
+            outfile.write(str({'action': action.value, 'data': data})+'\n')"""
 
-    def load(self):
-
-        def exist_stn(code_station: str):
-            resp = None
-            for p_station in self.stations:
-                if p_station.get_code() == int(code_station):
-                    resp = p_station
-                    break
-            return resp
-
-        with open('./data/save/data1.json') as infile:
-            data = json.load(infile)
-            for code in data['buses']:
-                bus = data['buses'][code]
-
-                route = data['routes'][str(bus['route'])]
-                new_route: Route = Route(code=bus['route'])
-                for code_path in route['paths']:
-                    path = data['paths'][str(code_path)]
-
-                    code_stn = path['station']
-                    new_stn = None
-                    if code_stn:
-                        station = exist_stn(str(code_stn))
-                        if not station:
-                            station = data['stations'][str(code_stn)]
-                            stn_type = StationType.STATION
-                            if station['type'] == StationType.PARKING.value:
-                                stn_type = StationType.PARKING
-                            new_stn = Station(code=path['station'], location=station['location'],
-                                              use=station['use'], capacity=station['capacity'],
-                                              stn_type=stn_type)
-                            if station['type'] == StationType.PARKING.value:
-                                new_stn.color = station['color']
-                            self.stations.append(new_stn)
-                        else:
-                            new_stn = station
-
-                    new_path: Path = Path(code=code_path, start=path['start'], end=path['end'], station=new_stn)
-                    new_route.add_path(new_path)
-                    self.paths.append(new_path)
-                self.routes.append(new_route)
-
-                parking = exist_stn(str(bus['parking']))
-                if not parking:
-                    parking = data['stations'][str(bus['parking'])]
-                    stn_type = StationType.STATION
-                    if parking['type'] == StationType.PARKING.value:
-                        stn_type = StationType.PARKING
-                    new_stn: Station = Station(code=bus['parking'], location=parking['location'],
-                                               use=parking['use'], capacity=parking['capacity'],
-                                               stn_type=stn_type)
-                    new_stn.color = parking['color']
-                    self.stations.append(new_stn)
-                self.buses.append(Bus(code=code, capacity=bus['capacity'], use=bus['use'], speed=bus['speed'],
-                                      route=new_route, color=color1, parking=parking))
-
-            for map_path in data['map_paths']:
-                (start, end) = map_path
-                start = tuple(start)
-                end = tuple(end)
-                self.map_paths.append([start, end])
-
-            for code_stn in data['stations']:
-                station = exist_stn(code_stn)
-                if not station:
-                    station = data['stations'][code_stn]
-                    stn_type = StationType.STATION
-                    if station['type'] == StationType.PARKING.value:
-                        stn_type = StationType.PARKING
-                    new_stn = Station(code=code_stn, location=station['location'], use=station['use'],
-                                      capacity=station['capacity'], stn_type=stn_type)
-                    if station['type'] == StationType.PARKING.value:
-                        new_stn.color = station['color']
-                    self.stations.append(new_stn)
-            """for user in self.users:
-                data['users'].append(user.encode())"""
-
-    def log(self):
-        with open('./data/stations.csv', mode='a') as csv_file:
-            fieldnames = ['code', 'location', 'capacity', 'use', 'type', 'isClose']
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, lineterminator='\n')
-
-            writer.writeheader()
-            for stn in self.stations:
-                stn: Station = stn
-                writer.writerow({'location': stn.get_location(), 'capacity': stn.get_capacity(), 'use': stn.get_use(),
-                                'type': stn.get_type(), 'isClose': stn.is_close(), 'code': stn.get_code()})
-
-        with open('./data/buses.csv', mode='a') as csv_file:
-            fieldnames = ['code', 'speed', 'parking', 'capacity', 'use', 'route']
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, lineterminator='\n')
-
-            writer.writeheader()
-            for bus in self.buses:
-                bus: Bus = bus
-                writer.writerow({'code': bus.get_code(), 'speed': bus.get_speed(),
-                                 'parking': bus.get_parking().get_code(), 'capacity': bus.get_capacity(),
-                                 'use': bus.get_use(), 'route': bus.get_route().get_code()})
-
-        with open('./data/users.csv', mode='a') as csv_file:
-            fieldnames = ['code', 'route', 'source', 'destination', 'start_date_trip', 'end_date_trip']
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, lineterminator='\n')
-
-            writer.writeheader()
-            for user in self.users:
-                user: User = user
-                writer.writerow({'code': user.get_code(), 'source': user.get_src().get_code(),
-                                 'destination': user.get_dest().get_code(), 'route': user.get_route().get_code(),
-                                 'start_date_trip': user.get_start_trip(), 'end_date_trip': user.get_end_trip()})
-
-        with open('./data/routes.csv', mode='a') as csv_file:
-            fieldnames = ['code', 'isBlock', '#paths', 'paths']
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, lineterminator='\n')
-
-            writer.writeheader()
-            for route in self.routes:
-                route: Route = route
-                paths = ''
-                for path in route.get_paths():
-                    paths += str(path.get_code())+'-'
-                writer.writerow({'code': route.get_code(), 'isBlock': route.is_block(),
-                                 '#paths': len(route.get_paths()), 'paths': paths})
-
-        with open('./data/paths.csv', mode='a') as csv_file:
-            fieldnames = ['code', 'start', 'end', 'isBlock', 'station', 'typeMove']
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, lineterminator='\n')
-
-            writer.writeheader()
-            for path in self.paths:
-                path: Path = path
-                stn = path.get_station()
-                stn_code = None
-                if stn:
-                    stn_code = stn.get_code()
-                writer.writerow({'code': path.get_code(), 'start': path.get_start_point(),
-                                 'end': path.get_end_point(), 'isBlock': path.is_block(),
-                                 'station': stn_code})
-
-    def load_map(self):
-        """Carga todas las entidades del mundo, además del mapa."""
-        if self.__loaded:
-            self.map_paths = []
-            self.stations = []
-            self.routes = []
-            self.buses = []
-            self.users = []
-            self.paths = []
+    def clean(self):
+        self.map_paths = []
+        self.stations = []
+        self.routes = []
+        self.buses = []
+        self.users = []
+        self.paths = []
         """self.load_map_paths()
         self.load_stations()
         self.load_parking_lot()
         self.load_map_paths()
         self.load_routes()
         self.load_buses()"""
-        self.__loaded = True
 
-    def load_parking_lot(self):
+    def generate_passengers(self):
+
+        for i in range(0, 100):
+            src = None
+            dest = None
+            num_random = random.randint(0, len(self.routes)-1)
+            route = self.routes[num_random]
+            for path in route.get_paths():
+                station = path.get_station()
+                select_stn = random.randint(0, 1)
+                if select_stn == 1 and station and station.get_type() == StationType.STATION:
+                    if src:
+                        dest = station
+                    elif not dest and not station.is_close():
+                        src = station
+            if src and dest and src.get_capacity() != src.get_use():
+                user = User(src=src, dest=dest, route=route, code=i+1)
+                user.start_trip()
+                self.users.append(user)
+                src.new_user(user)
+                self.notify(src)
+                time.sleep(0.4)
+
+    """def load_parking_lot(self):
         stn1 = Station(capacity=10, location=(40, 40), use=0, stn_type=StationType.PARKING, code=9)
         stn2 = Station(capacity=5, location=(952, 404), use=0, stn_type=StationType.PARKING, code=10)
 
@@ -317,10 +322,6 @@ class Generator(ObserverLogic):
                    route=self.routes[1])
         self.buses.append(bus2)
 
-        """bus3 = Bus(parking=self.parking_lot[0], capacity=50, use=5, speed=120)
-        bus3.set_route(self.routes[2])
-        self.buses.append(bus3)"""
-
     def load_stations(self):
         stn1 = Station(location=(40, 404),
                        use=0, capacity=100, stn_type=StationType.STATION, code=1)
@@ -347,31 +348,66 @@ class Generator(ObserverLogic):
         self.stations.append(stn5)
         self.stations.append(stn6)
         self.stations.append(stn7)
-        self.stations.append(stn8)
+        self.stations.append(stn8)"""
+    """with open('./data/stations.csv', mode='a') as csv_file:
+            fieldnames = ['code', 'location', 'capacity', 'use', 'type', 'isClose']
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, lineterminator='\n')
 
-    def generate_passengers(self):
+            writer.writeheader()
+            for stn in self.stations:
+                stn: Station = stn
+                writer.writerow({'location': stn.get_location(), 'capacity': stn.get_capacity(), 'use': stn.get_use(),
+                                'type': stn.get_type(), 'isClose': stn.is_close(), 'code': stn.get_code()})
 
-        for i in range(0, 16):
-            src = None
-            dest = None
-            num_random = random.randint(0, len(self.routes)-1)
-            route = self.routes[num_random]
-            station_src: Station = None
-            for path in route.get_paths():
-                station = path.get_station()
-                if station and station.get_type() == StationType.STATION:
-                    if src:
-                        dest = station
-                    elif not dest:
-                        src = station
-                        station_src = path.get_station()
+        with open('./data/buses.csv', mode='a') as csv_file:
+            fieldnames = ['code', 'speed', 'parking', 'capacity', 'use', 'route']
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, lineterminator='\n')
 
-            user = User(src=src, dest=dest, route=route, code=i+1)
-            user.start_trip()
-            self.users.append(user)
-            station_src.new_user(user)
-            self.notify(station_src)
-            time.sleep(0.6)
+            writer.writeheader()
+            for bus in self.buses:
+                bus: Bus = bus
+                writer.writerow({'code': bus.get_code(), 'speed': bus.get_speed(),
+                                 'parking': bus.get_parking().get_code(), 'capacity': bus.get_capacity(),
+                                 'use': bus.get_use(), 'route': bus.get_route().get_code()})
+
+        with open('./data/users.csv', mode='a') as csv_file:
+            fieldnames = ['code', 'route', 'source', 'destination', 'start_date_trip', 'end_date_trip']
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, lineterminator='\n')
+
+            writer.writeheader()
+            for user in self.users:
+                user: User = user
+                writer.writerow({'code': user.get_code(), 'source': user.get_src().get_code(),
+                                 'destination': user.get_dest().get_code(), 'route': user.get_route().get_code(),
+                                 'start_date_trip': user.get_start_trip(), 'end_date_trip': user.get_end_trip()})
+
+        with open('./data/routes.csv', mode='a') as csv_file:
+            fieldnames = ['code', 'isBlock', '#paths', 'paths']
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, lineterminator='\n')
+
+            writer.writeheader()
+            for route in self.routes:
+                route: Route = route
+                paths = ''
+                for path in route.get_paths():
+                    paths += str(path.get_code())+'-'
+                writer.writerow({'code': route.get_code(), 'isBlock': route.is_block(),
+                                 '#paths': len(route.get_paths()), 'paths': paths})
+
+        with open('./data/paths.csv', mode='a') as csv_file:
+            fieldnames = ['code', 'start', 'end', 'isBlock', 'station', 'typeMove']
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames, lineterminator='\n')
+
+            writer.writeheader()
+            for path in self.paths:
+                path: Path = path
+                stn = path.get_station()
+                stn_code = None
+                if stn:
+                    stn_code = stn.get_code()
+                writer.writerow({'code': path.get_code(), 'start': path.get_start_point(),
+                                 'end': path.get_end_point(), 'isBlock': path.is_block(),
+                                 'station': stn_code})"""
 
 
 

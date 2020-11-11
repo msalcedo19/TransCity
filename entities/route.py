@@ -20,6 +20,9 @@ class Route:
         self.__block = False
         self.__code = code
 
+    def __eq__(self, other_route):
+        return self.__code == other_route.get_code()
+
     def encode(self):
         paths = []
         for path in self.__paths:
