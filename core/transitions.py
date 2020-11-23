@@ -4,7 +4,7 @@ from entities.path import *
 from entities.station import *
 from entities.bus import *
 from copy import copy
-from core.envButtons import Action
+from utils.RL import States
 
 
 def animate_route(app, animation_object: AnimationObject, fun=None):
@@ -40,41 +40,45 @@ def animate_route(app, animation_object: AnimationObject, fun=None):
                     else:
                         path_in.set_station(stn=None)
                 bus_available[0].set_route(new_route)
-                app.launch_bus(bus=bus_available[0])
-                app.generator.log(Action.SEND_BUS)
+                app.send_bus(bus=bus_available[0])
 
         if p_station and p_station.get_type() == StationType.STATION:
 
             # Usuarios se bajan del bus
             for user in copy(p_bus.users()):
-                if user.get_dest() == p_station and app.active:
+                if user.get_dest() == p_station:
                     p_bus.del_user(user)
                     user.end_trip()
                     if p_bus.is_block() and p_bus.get_use() <= p_bus.get_capacity() * 0.7:
                         p_bus.btn_id.configure(bg='SystemButtonFace')
-                        app.show_notification('Bus: {}\n Capacity < 70%'.format(p_bus.get_code()))
+                        app.show_notification(message='Bus: {}\n Capacity < 70%'.format(p_bus.get_code()),
+                                              state=States.RELEASE_BUS, bus=p_bus)
 
             # Usuarios se suben al bus
             for user in copy(p_station.users()):
-                if user.get_src() == p_station and user.get_route() == p_bus.get_route() and \
-                        app.active:
+                if user.get_route() == p_bus.get_route() and p_bus.get_use() < p_bus.get_capacity():
                     p_bus.add_user(user)
                     p_station.del_user(user)
                     app.canvas.itemconfig(p_station.id_text_object, text=p_station.get_use())
 
                     if p_station.is_close() and p_station.get_use() <= p_station.get_capacity()*0.7:
-                        app.show_notification('Station: {}\n Capacity < 70%'.format(p_station.get_code()))
+                        app.show_notification(message='Station: {}\n Capacity < 70%'.format(p_station.get_code()),
+                                              state=States.RELEASE_STATION, station=p_station)
                         p_station.btn_id.configure(bg='SystemButtonFace')
 
                     if p_bus.get_capacity() == p_bus.get_use():
                         p_bus.btn_id.configure(bg='red')
-                        app.show_notification(message='Bus: {}\n Full'.format(p_bus.get_code()))
-                        send_bus(full_station=p_station)
+                        app.show_notification(message='Bus: {}\n Full'.format(p_bus.get_code()), state=States.FULL_BUS,
+                                              bus=p_bus, station=station)
+                        # send_bus(full_station=p_station)
+                else:
+                    break
 
         elif p_station and p_station.get_type() == StationType.PARKING:
             station_aux = path.get_station()
             station_aux.increase_user()
             p_bus.deactivate()
+            p_bus.set_parking(parking=station_aux)
             app.canvas.itemconfig(station_aux.id_text_object, text=str(station_aux.get_use()))
             app.canvas.delete(id_image)
 
@@ -158,7 +162,6 @@ def animate_route(app, animation_object: AnimationObject, fun=None):
             app.canvas.delete(id_image)
         else:
             station = path.get_station()
-            print(station)
             verify_station(p_station=station, p_bus=bus)
 
             paths = animation_object.paths_left
@@ -168,7 +171,7 @@ def animate_route(app, animation_object: AnimationObject, fun=None):
                 (path_x1, path_y1) = path.get_start_point()
                 del paths[0]
                 animation_object.set_value(x=path_x1, y=path_y1, actual_path=path, paths_left=paths, actual_bus=bus)
-                if station and station.get_type() == StationType.STATION and not station.is_close():
+                if station and station.get_type() == StationType.STATION:
                     app.after(1000, animate_route, app, animation_object)
                 else:
                     animate_route(app, animation_object)

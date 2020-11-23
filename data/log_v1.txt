@@ -1,0 +1,13 @@
+{"state": "FULL_STATION"}
+{"action": "SEND_BUS"}
+{"action": "CLOSE_STATION"}
+{"state": "FULL_BUS"}
+{"action": "SEND_BUS"}
+{"action": "CLOSE_BUS"}
+{"state": "RELEASE_STATION"}
+{"action": "OPEN_STATION"}
+{"state": "RELEASE_BUS"}
+{"action": "OPEN_BUS"}
+{"state": "FULL_STATION"}
+{"action": "SEND_BUS"}
+{"action": "CLOSE_STATION"}

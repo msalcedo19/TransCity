@@ -40,8 +40,10 @@ class Bus:
         self.__users = []
         self.__block = block
         self.__active = False
+
         self.__id_object = None
         self.btn_id = None
+        self.btn_close = None
 
     def __eq__(self, other_bus):
         return self.__code == other_bus.get_code()
@@ -52,6 +54,9 @@ class Bus:
             users.append(user.get_code())
         return dict(capacity=self.__capacity, use=self.__use, speed=self.__speed, route=self.__route.get_code(),
                     parking=self.__parking.get_code(), users=users, block=self.__block)
+
+    def __str__(self):
+        return "Bus " + str(self.__code)
 
     def add_user(self, user):
         self.__users.append(user)

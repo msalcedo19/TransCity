@@ -23,6 +23,12 @@ class Route:
     def __eq__(self, other_route):
         return self.__code == other_route.get_code()
 
+    def __str__(self):
+        str_paths = ""
+        for path in self.__paths:
+            str_paths += str(path.get_code()) + " "
+        return "Route " + str(self.__code) + " Paths " + str_paths
+
     def encode(self):
         paths = []
         for path in self.__paths:

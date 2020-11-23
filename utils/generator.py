@@ -3,7 +3,6 @@ from entities.route import Route
 from entities.path import Path
 from entities.station import Station, StationType
 from entities.user import User
-from core.envButtons import Action
 from const import *
 import random
 import time
@@ -137,6 +136,7 @@ class Generator(ObserverLogic):
                         new_stn.color = parking['color']
                         self.stations.append(new_stn)
                         parking = new_stn
+                    parking.increase_user()
                     self.buses.append(Bus(code=int(code), capacity=bus['capacity'], use=bus['use'], speed=bus['speed'],
                                           route=new_route, color=color1, parking=parking, block=bus['block']))
 
@@ -160,7 +160,7 @@ class Generator(ObserverLogic):
 
                         self.stations.append(new_stn)
 
-    def log(self, action: Action):
+    def log(self, **kwargs):
         data = dict()
         """data['buses'] = {}
         data['stations'] = {}
@@ -176,9 +176,12 @@ class Generator(ObserverLogic):
         for route in self.routes:
             data['routes'][route.get_code()] = route.encode()
         for path in self.paths:
-            data['paths'][path.get_code()] = path.encode()
+            data['paths'][path.get_code()] = path.encode()"""
         with open('./data/log_v1.txt', 'a') as outfile:
-            outfile.write(str({'action': action.value, 'data': data})+'\n')"""
+            if kwargs.get('action'):
+                outfile.write(str({"action": kwargs['action'].value})+"\n")
+            else:
+                outfile.write(str({"state": kwargs['state'].value})+"\n")
 
     def clean(self):
         self.map_paths = []
@@ -194,9 +197,10 @@ class Generator(ObserverLogic):
         self.load_routes()
         self.load_buses()"""
 
-    def generate_passengers(self):
-
-        for i in range(0, 100):
+    def generate_passengers(self, app, qty: int):
+        for i in range(0, qty):
+            if not app.active:
+                break
             src = None
             dest = None
             num_random = random.randint(0, len(self.routes)-1)
